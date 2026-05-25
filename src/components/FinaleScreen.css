@@ -45,17 +45,17 @@
   letter-spacing: 1.5px;
 }
 
-/* I: 上段アーチ (HAPPY BIRTHDAY) */
+/* 上段アーチ (HAPPY BIRTHDAY) — フォントサイズを縮小して H/Y が収まるよう調整 */
 .arch-text--top {
-  font-size: 36px;
+  font-size: 28px;
 }
 
-/* I: 下段アーチ (こっちゃん!!) */
+/* 下段アーチ (こっちゃん!!) */
 .arch-text--bottom {
   font-size: 30px;
 }
 
-/* H: チェキ風写真 — 縦横ど真ん中（translate は Framer Motion の x/y で処理する） */
+/* チェキ風写真 — 縦横ど真ん中（translate は Framer Motion の x/y で処理する） */
 .finale-cheki {
   position: absolute;
   top: 50%;
@@ -103,18 +103,25 @@
   letter-spacing: 2px;
   white-space: nowrap;
   display: inline-block;
-  /* 日付の擦れ感: ほんのり傾けて手書きっぽく */
   transform: rotate(-2deg);
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
 
-/* 再遊ボタン（translateX(-50%) は Framer Motion 側で処理する） */
-.finale-replay-btn {
+/* 再遊ボタン wrapper（translateX(-50%) は Framer Motion 側で処理） */
+.finale-replay-wrap {
   position: absolute;
   bottom: max(8%, env(safe-area-inset-bottom, 16px));
   left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 30;
+}
+
+.finale-replay-btn {
   font-family: var(--yk-font-pop);
   font-size: 22px;
+  white-space: nowrap;
   color: var(--yk-text);
   background: white;
   border: 3px solid var(--yk-pink);
@@ -124,12 +131,19 @@
   box-shadow: var(--yk-shadow-pink);
   transition: background 0.2s;
   -webkit-tap-highlight-color: transparent;
-  z-index: 30;
 }
 
 .finale-replay-btn:hover,
 .finale-replay-btn:active {
   background: var(--yk-pink-light);
+}
+
+.finale-replay-note {
+  margin: 8px 0 0;
+  color: #000;
+  font-family: var(--yk-font-body);
+  font-size: 13px;
+  text-align: center;
 }
 
 /* 背景デコ */

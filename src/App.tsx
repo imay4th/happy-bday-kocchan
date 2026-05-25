@@ -14,6 +14,7 @@ type Phase = 'idle' | 'charge' | 'cake' | 'finale';
 
 function App() {
   const [phase, setPhase] = useState<Phase>('idle');
+  const [replayCount, setReplayCount] = useState(0);
   const sound = useSoundEffect();
 
   const [speed, setSpeed] = useState<number>(() => {
@@ -56,6 +57,7 @@ function App() {
   }, [sound]);
 
   const handleIdle = useCallback(() => {
+    setReplayCount((c) => c + 1);
     void handlePhaseChange('idle');
   }, [handlePhaseChange]);
 
@@ -96,7 +98,7 @@ function App() {
           )}
           {phase === 'finale' && (
             <div key="finale" className="phase-container">
-              <FinaleScreen onPhaseChange={handleIdle} />
+              <FinaleScreen onPhaseChange={handleIdle} replayCount={replayCount} />
             </div>
           )}
         </AnimatePresence>

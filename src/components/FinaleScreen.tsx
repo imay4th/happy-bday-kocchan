@@ -7,6 +7,7 @@ import './FinaleScreen.css';
 
 interface FinaleScreenProps {
   onPhaseChange: () => void;
+  replayCount: number;
 }
 
 const PHOTO_DATE = '2026.5.26';
@@ -19,24 +20,43 @@ function fireConfetti(): void {
   setTimeout(() => confetti({ ...opts, origin: { x: 0.5, y: 0.3 }, particleCount: 120, spread: 130 }), 1000);
 }
 
-export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
+export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScreenProps) {
   const speed = useSpeed();
   const [showButton, setShowButton] = useState(false);
   const [showDate, setShowDate] = useState(false);
   const firedRef = useRef(false);
 
-  // マウント時に写真をランダムに1枚決定（useState の lazy initializer は副作用OK）
-  const [selectedPhoto] = useState<string>(() => PHOTOS[Math.floor(Math.random() * PHOTOS.length)]);
+  // 初回は pic-06.jpg 固定、再遊からはランダム
+  const [selectedPhoto] = useState<string>(() => {
+    if (replayCount === 0) {
+      const BASE = import.meta.env.BASE_URL as string;
+      return `${BASE}photos/pic-06.jpg`;
+    }
+    return PHOTOS[Math.floor(Math.random() * PHOTOS.length)];
+  });
 
   useEffect(() => {
     if (firedRef.current) return;
     firedRef.current = true;
     fireConfetti();
-    // G: 日付ワイプ開始 1800ms (speed 倍率対象)
+    // 紙吹雪を継続発射（Finale が表示されている間ずっと）
+    const colors = ['#FFB6D9', '#C5A3FF', '#B7F0DC', '#A8E1FF', '#FF6FA8', '#FFD93D'];
+    const interval = setInterval(() => {
+      confetti({
+        colors,
+        particleCount: 50,
+        spread: 100,
+        startVelocity: 30,
+        origin: { x: Math.random(), y: 0 },
+        gravity: 0.8,
+      });
+    }, 1800);
+    // 日付ワイプ開始 1800ms
     const dateTimer = setTimeout(() => setShowDate(true), 1800 * speed);
-    // G: 再遊ボタン出現 5200ms (speed 倍率対象)
+    // 再遊ボタン出現 5200ms
     const btnTimer = setTimeout(() => setShowButton(true), 5200 * speed);
     return () => {
+      clearInterval(interval);
       clearTimeout(dateTimer);
       clearTimeout(btnTimer);
     };
@@ -48,14 +68,17 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ type: 'spring', bounce: 0.7, duration: 1.2 * speed }}
+      transition={{ type: 'spring', bounce: 0.7, duration: 0.4 * speed }}
     >
-      {/* I: 上下二段アーチ */}
-      <svg
+      {/* 上下二段アーチ — 独立 motion.svg で同時 spring 出現 */}
+      <motion.svg
         className="finale-arch"
-        viewBox="0 0 400 220"
+        viewBox="0 -20 400 240"
         preserveAspectRatio="xMidYMid meet"
         aria-label={`HAPPY BIRTHDAY ${CHARA_NAME}!!`}
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', bounce: 0.5, duration: 1.0 * speed, delay: 0 }}
       >
         <defs>
           <linearGradient id="rainbow-grad" x1="0" y1="0" x2="1" y2="0">
@@ -86,12 +109,12 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          {/* I: 上アーチ path */}
-          <path id="arch-path-top" d="M 30 110 Q 200 -30 370 110" fill="none" />
-          {/* I: 下アーチ path */}
-          <path id="arch-path-bottom" d="M 60 180 Q 200 85 340 180" fill="none" />
+          {/* 上アーチ — 両端を viewBox 端まで広げ、上方向に深くカーブ */}
+          <path id="arch-path-top" d="M 10 130 Q 200 -10 390 130" fill="none" />
+          {/* 下アーチ */}
+          <path id="arch-path-bottom" d="M 70 200 Q 200 110 330 200" fill="none" />
         </defs>
-        {/* I: 上アーチ: HAPPY BIRTHDAY */}
+        {/* 上アーチ: HAPPY BIRTHDAY */}
         <text
           className="arch-text arch-text--top"
           fill="url(#rainbow-grad)"
@@ -106,7 +129,7 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
             HAPPY BIRTHDAY
           </textPath>
         </text>
-        {/* I: 下アーチ: こっちゃん!! */}
+        {/* 下アーチ: こっちゃん!! */}
         <text
           className="arch-text arch-text--bottom"
           fill="url(#rainbow-grad)"
@@ -121,14 +144,14 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
             {CHARA_NAME}!!
           </textPath>
         </text>
-      </svg>
+      </motion.svg>
 
-      {/* H: チェキを画面縦横ど真ん中に配置 */}
+      {/* チェキ — delay: 0 でアーチと同時 spring 飛び出し */}
       <motion.div
         className="finale-cheki"
         initial={{ opacity: 0, scale: 0, rotate: -10, x: '-50%', y: 'calc(-50% + 60px)' }}
         animate={{ opacity: 1, scale: 1, rotate: -3, x: '-50%', y: '-50%' }}
-        transition={{ type: 'spring', bounce: 0.5, duration: 1.0 * speed, delay: 0.6 * speed }}
+        transition={{ type: 'spring', bounce: 0.5, duration: 1.0 * speed, delay: 0 }}
       >
         <div className="cheki-image-wrap">
           <img src={selectedPhoto} alt="" className="cheki-image" />
@@ -145,20 +168,25 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
         </div>
       </motion.div>
 
-      {/* 再遊ボタン */}
+      {/* 再遊ボタン + 注釈 */}
       <AnimatePresence>
         {showButton && (
-          <motion.button
-            className="finale-replay-btn"
+          <motion.div
+            className="finale-replay-wrap"
             initial={{ opacity: 0, x: '-50%', y: 30 }}
             animate={{ opacity: 1, x: '-50%', y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ type: 'spring', bounce: 0.5 }}
-            onClick={onPhaseChange}
-            whileTap={{ x: '-50%', scale: 0.92 }}
           >
-            もう一度遊ぶ♡
-          </motion.button>
+            <motion.button
+              className="finale-replay-btn"
+              onClick={onPhaseChange}
+              whileTap={{ scale: 0.92 }}
+            >
+              もう一度遊ぶ♡
+            </motion.button>
+            <p className="finale-replay-note">※違う画像が見れるかも！？</p>
+          </motion.div>
         )}
       </AnimatePresence>
 

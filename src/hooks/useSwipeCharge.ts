@@ -85,7 +85,7 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
     const dy = e.clientY - lastPosRef.current.y;
     const delta = Math.hypot(dx, dy);
     accumulatedRef.current = Math.min(maxDistance, accumulatedRef.current + delta);
-    setChargeAmount(accumulatedRef.current / maxDistance);
+    setChargeAmount(Math.min(1, accumulatedRef.current / maxDistance));
     lastPosRef.current = { x: e.clientX, y: e.clientY };
     resetIdleTimer();
   }, [maxDistance, resetIdleTimer]);

@@ -15,7 +15,6 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
   const [isPreparing, setIsPreparing] = useState(false);
   const [candleTilted, setCandleTilted] = useState(false);
 
-  // E: onPointerDown に変更 + 重複防止を isPreparing も含める
   const handleFlameClick = (e: React.PointerEvent) => {
     e.preventDefault();
     if (!flameVisible || isPreparing) return;
@@ -23,12 +22,12 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
     setWindVisible(true);
     setCandleTilted(true);
     onBlow();
-    // 風が吹き終わる (G: 1200ms * speed)
+    // 風が吹き終わる (1200ms * speed)
     const t1 = setTimeout(() => setWindVisible(false), 1200 * speed);
-    // 火消し後、火を見守る間 (G: 600ms) → タメ開始
+    // 火消し後 600ms でタメ開始
     const t2 = setTimeout(() => setIsPreparing(true), 600 * speed);
-    // タメ完了 → 遷移 (G: 合計 1800ms)
-    const t3 = setTimeout(() => onPhaseChange(), 1800 * speed);
+    // 縮みきり = 600 + 1000 = 1600ms → Finale 開始
+    const t3 = setTimeout(() => onPhaseChange(), 1600 * speed);
 
     return () => {
       clearTimeout(t1);
@@ -42,8 +41,10 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
       className="cake-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, y: -30 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
+      onPointerDown={handleFlameClick}
+      style={{ cursor: flameVisible ? 'pointer' : 'default' }}
     >
       {/* タメ演出オーバーレイ */}
       <AnimatePresence>
@@ -65,7 +66,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
           initial={{ y: '100%' }}
           animate={{
             y: isPreparing ? 10 : 0,
-            scale: isPreparing ? 0.7 : 1,
+            scale: isPreparing ? 0 : 1,
           }}
           transition={
             isPreparing
@@ -73,34 +74,88 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               : { type: 'spring', bounce: 0.45, duration: 1.4 }
           }
         >
-          {/* ケーキSVG */}
+          {/* ゆめかわ3層ケーキSVG */}
           <svg
             className="cake-svg"
-            viewBox="0 0 200 220"
+            viewBox="0 0 200 240"
             xmlns="http://www.w3.org/2000/svg"
-            onPointerDown={handleFlameClick}
-            style={{ cursor: flameVisible ? 'pointer' : 'default' }}
           >
-            {/* ベース（ピンク） */}
-            <rect x="20" y="130" width="160" height="70" rx="12" fill="#FFB6D9" stroke="#FF6FA8" strokeWidth="3" />
-            {/* クリーム層（ラベンダー） */}
-            <rect x="30" y="110" width="140" height="30" rx="8" fill="#C5A3FF" stroke="#A07AFF" strokeWidth="2.5" />
-            {/* クリームの波 */}
-            <path d="M30 115 Q50 105 70 115 Q90 125 110 115 Q130 105 150 115 Q170 125 170 115" fill="none" stroke="white" strokeWidth="2" strokeOpacity="0.6" />
-            {/* 苺デコ */}
-            <circle cx="65" cy="108" r="7" fill="#FF4466" />
-            <circle cx="100" cy="106" r="8" fill="#FF4466" />
-            <circle cx="135" cy="108" r="7" fill="#FF4466" />
-            <circle cx="65" cy="108" r="4" fill="#FF7799" />
-            <circle cx="100" cy="106" r="5" fill="#FF7799" />
-            <circle cx="135" cy="108" r="4" fill="#FF7799" />
+            <defs>
+              <filter id="cake-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-            {/* ろうそく「2」 (F: 風を受けて傾く) */}
+            {/* ===== 下層 ===== */}
+            {/* 下層台座 ピンク */}
+            <rect x="10" y="180" width="180" height="50" rx="12" fill="#FFB6D9" stroke="#FF6FA8" strokeWidth="2.5" />
+            {/* 下層上端クリームドリップ */}
+            <path
+              d="M10 190 Q20 178 30 190 Q40 200 50 190 Q60 178 70 190 Q80 200 90 190 Q100 178 110 190 Q120 200 130 190 Q140 178 150 190 Q160 200 170 190 Q180 178 190 190"
+              fill="white" stroke="none" opacity="0.85"
+            />
+            {/* 下層水玉 */}
+            <circle cx="40" cy="205" r="3" fill="white" opacity="0.6" />
+            <circle cx="75" cy="210" r="3" fill="white" opacity="0.5" />
+            <circle cx="110" cy="205" r="3" fill="white" opacity="0.6" />
+            <circle cx="145" cy="210" r="3" fill="white" opacity="0.5" />
+            <circle cx="170" cy="203" r="3" fill="white" opacity="0.55" />
+            <circle cx="28" cy="215" r="2.5" fill="white" opacity="0.4" />
+            <circle cx="160" cy="215" r="2.5" fill="white" opacity="0.4" />
+
+            {/* ===== 中層 ===== */}
+            {/* 中層台座 ラベンダー */}
+            <rect x="25" y="140" width="150" height="45" rx="10" fill="#C5A3FF" stroke="#A07AFF" strokeWidth="2" />
+            {/* 中層ピンクリボン横巻き */}
+            <rect x="25" y="158" width="150" height="10" fill="#FF9EC8" opacity="0.7" rx="3" />
+            {/* 中層上端クリームドリップ */}
+            <path
+              d="M25 152 Q35 140 45 152 Q55 162 65 152 Q75 140 85 152 Q95 162 105 152 Q115 140 125 152 Q135 162 145 152 Q155 140 165 152 Q170 158 175 152"
+              fill="white" stroke="none" opacity="0.85"
+            />
+            {/* 中層水玉 */}
+            <circle cx="50" cy="165" r="2.5" fill="white" opacity="0.55" />
+            <circle cx="100" cy="170" r="2.5" fill="white" opacity="0.5" />
+            <circle cx="145" cy="165" r="2.5" fill="white" opacity="0.55" />
+
+            {/* ===== 上層 ===== */}
+            {/* 上層台座 クリーム色 */}
+            <rect x="40" y="100" width="120" height="45" rx="10" fill="#FFF8E7" stroke="#F0D080" strokeWidth="2" />
+            {/* 上層上端ホイップクリーム（雲形） */}
+            <path
+              d="M40 112 Q50 98 62 110 Q72 100 84 110 Q94 98 106 110 Q116 100 128 110 Q138 98 150 110 Q158 104 160 112"
+              fill="white" stroke="none" opacity="0.9"
+            />
+            {/* 上層水玉 */}
+            <circle cx="60" cy="122" r="2.5" fill="white" opacity="0.6" />
+            <circle cx="100" cy="128" r="2.5" fill="white" opacity="0.5" />
+            <circle cx="140" cy="122" r="2.5" fill="white" opacity="0.6" />
+
+            {/* ===== トッピング（上層の上） ===== */}
+            {/* 苺 3つ */}
+            <circle cx="60" cy="95" r="6" fill="#FF4466" />
+            <circle cx="60" cy="95" r="3.5" fill="#FF7799" />
+            <circle cx="100" cy="92" r="7" fill="#FF4466" />
+            <circle cx="100" cy="92" r="4" fill="#FF7799" />
+            <circle cx="140" cy="95" r="6" fill="#FF4466" />
+            <circle cx="140" cy="95" r="3.5" fill="#FF7799" />
+            {/* チェリー */}
+            <circle cx="75" cy="94" r="5" fill="#CC1133" />
+            <line x1="75" y1="89" x2="78" y2="82" stroke="#44AA44" strokeWidth="1.5" strokeLinecap="round" />
+            {/* ハート */}
+            <text x="125" y="98" textAnchor="middle" fontSize="14" fill="#FF6FA8">♡</text>
+
+            {/* ===== ろうそく「2」と「7」 ===== */}
+            {/* ろうそく「2」 */}
             <motion.text
-              x="78"
-              y="115"
+              x="80"
+              y="98"
               textAnchor="middle"
-              fontSize="56"
+              fontSize="50"
               fontWeight="900"
               fill="#FFF176"
               stroke="#F9C300"
@@ -108,15 +163,15 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               fontFamily="'Mochiy Pop One', sans-serif"
               animate={candleTilted ? { rotate: [0, 6, 0] } : { rotate: 0 }}
               transition={candleTilted ? { duration: 1.0, ease: 'easeInOut' } : {}}
-              style={{ transformOrigin: '78px 115px' }}
+              style={{ transformOrigin: '80px 98px' }}
             >2</motion.text>
 
-            {/* ろうそく「7」 (F: 風を受けて傾く) */}
+            {/* ろうそく「7」 */}
             <motion.text
-              x="122"
-              y="115"
+              x="120"
+              y="98"
               textAnchor="middle"
-              fontSize="56"
+              fontSize="50"
               fontWeight="900"
               fill="#FFF176"
               stroke="#F9C300"
@@ -124,10 +179,10 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               fontFamily="'Mochiy Pop One', sans-serif"
               animate={candleTilted ? { rotate: [0, 6, 0] } : { rotate: 0 }}
               transition={candleTilted ? { duration: 1.0, ease: 'easeInOut', delay: 0.1 } : {}}
-              style={{ transformOrigin: '122px 115px' }}
+              style={{ transformOrigin: '120px 98px' }}
             >7</motion.text>
 
-            {/* 炎グループ (2つ) */}
+            {/* ===== 炎グループ ===== */}
             <AnimatePresence>
               {flameVisible && (
                 <>
@@ -136,21 +191,21 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
                     initial={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.3, x: 25, rotate: 40 }}
                     transition={{ duration: 0.6 }}
-                    style={{ transformOrigin: '78px 52px' }}
+                    style={{ transformOrigin: '80px 45px' }}
                   >
                     <motion.path
-                      d="M78 26 C86 38 93 46 90 58 C88 66 82 69 78 69 C74 69 68 66 66 58 C63 46 70 38 78 26 Z"
+                      d="M80 18 C88 30 95 38 92 50 C90 58 84 61 80 61 C76 61 70 58 68 50 C65 38 72 30 80 18 Z"
                       fill="#FF8C00"
                       className="flame-outer"
                     />
                     <motion.path
-                      d="M78 34 C83 42 87 50 85 58 C83 64 80 66 78 66 C76 66 73 64 71 58 C69 50 73 42 78 34 Z"
+                      d="M80 26 C85 34 89 42 87 50 C85 56 82 58 80 58 C78 58 75 56 73 50 C71 42 75 34 80 26 Z"
                       fill="#FFD600"
                       className="flame-inner"
                     />
                     <motion.ellipse
-                      cx="78"
-                      cy="61"
+                      cx="80"
+                      cy="53"
                       rx="5"
                       ry="6"
                       fill="white"
@@ -163,21 +218,21 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
                     initial={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.3, x: 25, rotate: 40 }}
                     transition={{ duration: 0.6 }}
-                    style={{ transformOrigin: '122px 52px' }}
+                    style={{ transformOrigin: '120px 45px' }}
                   >
                     <motion.path
-                      d="M122 26 C130 38 137 46 134 58 C132 66 126 69 122 69 C118 69 112 66 110 58 C107 46 114 38 122 26 Z"
+                      d="M120 18 C128 30 135 38 132 50 C130 58 124 61 120 61 C116 61 110 58 108 50 C105 38 112 30 120 18 Z"
                       fill="#FF8C00"
                       className="flame-outer"
                     />
                     <motion.path
-                      d="M122 34 C127 42 131 50 129 58 C127 64 124 66 122 66 C120 66 117 64 115 58 C113 50 117 42 122 34 Z"
+                      d="M120 26 C125 34 129 42 127 50 C125 56 122 58 120 58 C118 58 115 56 113 50 C111 42 115 34 120 26 Z"
                       fill="#FFD600"
                       className="flame-inner"
                     />
                     <motion.ellipse
-                      cx="122"
-                      cy="61"
+                      cx="120"
+                      cy="53"
                       rx="5"
                       ry="6"
                       fill="white"
@@ -191,17 +246,10 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             {/* ろうそく芯（炎消えた後） */}
             {!flameVisible && (
               <>
-                <line x1="78" y1="66" x2="78" y2="59" stroke="#555" strokeWidth="2" strokeLinecap="round" />
-                <line x1="122" y1="66" x2="122" y2="59" stroke="#555" strokeWidth="2" strokeLinecap="round" />
+                <line x1="80" y1="58" x2="80" y2="51" stroke="#555" strokeWidth="2" strokeLinecap="round" />
+                <line x1="120" y1="58" x2="120" y2="51" stroke="#555" strokeWidth="2" strokeLinecap="round" />
               </>
             )}
-
-            {/* ケーキ正面デコ */}
-            <circle cx="55" cy="160" r="6" fill="white" opacity="0.6" />
-            <circle cx="80" cy="170" r="5" fill="white" opacity="0.5" />
-            <circle cx="120" cy="170" r="5" fill="white" opacity="0.5" />
-            <circle cx="145" cy="160" r="6" fill="white" opacity="0.6" />
-            <text x="100" y="162" textAnchor="middle" fill="white" fontFamily="sans-serif" fontSize="12" fontWeight="bold" opacity="0.8">🎂</text>
           </svg>
         </motion.div>
 
@@ -220,7 +268,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
         </AnimatePresence>
       </div>
 
-      {/* F: 強化された風エフェクト */}
+      {/* 風エフェクト */}
       <AnimatePresence>
         {windVisible && (
           <motion.div
@@ -230,9 +278,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             exit={{}}
             transition={{ duration: 1.2 * speed, ease: 'easeOut' }}
           >
-            {/* ふんわり雲 */}
             <div className="wind-cloud" />
-            {/* 〜 と 💨 を複数散らす */}
             {['〜', '💨', '〜', '〜', '💨'].map((w, i) => (
               <span key={i} className={`wind-puff wind-puff--${i}`}>{w}</span>
             ))}

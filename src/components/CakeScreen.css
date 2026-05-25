@@ -32,9 +32,9 @@
 }
 
 .cake-svg {
-  width: 220px;
-  height: 242px;
-  filter: drop-shadow(var(--yk-shadow-pink));
+  width: 240px;
+  height: 280px;
+  filter: drop-shadow(0 12px 24px rgba(255, 111, 168, 0.35));
 }
 
 /* 炎アニメーション */

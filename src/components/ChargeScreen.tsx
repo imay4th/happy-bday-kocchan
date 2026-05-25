@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeCharge } from '../hooks/useSwipeCharge';
 import { HAPPY_BIRTHDAY_LETTERS, SWIPE_THRESHOLD_PER_LETTER } from '../assets/constants';
@@ -32,7 +32,7 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
   const heartRef = useRef<HTMLDivElement>(null);
   const [heartCenter, setHeartCenter] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updateCenter = () => {
       if (heartRef.current) {
         const rect = heartRef.current.getBoundingClientRect();
@@ -40,19 +40,24 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       }
     };
     updateCenter();
+    // 念のため次フレームでも再取得（transition で要素が動いている場合に正確な位置を取得するため）
+    const raf = requestAnimationFrame(updateCenter);
     window.addEventListener('resize', updateCenter);
-    return () => window.removeEventListener('resize', updateCenter);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateCenter);
+    };
   }, []);
 
   // 100% 達成時に発光エフェクト → フェーズ遷移（D）
   useEffect(() => {
-    if (chargeAmount >= 1 && !completedRef.current) {
+    if (chargeAmount >= 0.999 && !completedRef.current) {
       completedRef.current = true;
       setIsFullyCharged(true);
-      const timer = setTimeout(() => {
+      const t = setTimeout(() => {
         onPhaseChange();
       }, 1000 * speed);
-      return () => clearTimeout(timer);
+      return () => clearTimeout(t);
     }
   }, [chargeAmount, onPhaseChange, speed]);
 

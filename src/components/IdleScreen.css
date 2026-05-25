@@ -91,3 +91,22 @@
   0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
   50%       { transform: translateY(-16px) scale(1.1); opacity: 0.5; }
 }
+
+/* タップ受信用ネイティブ button オーバーレイ (最前面、画面全体) */
+.idle-tap-target {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  z-index: 100;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  appearance: none;
+  -webkit-appearance: none;
+  outline: none;
+}

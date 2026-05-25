@@ -24,12 +24,6 @@ export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.1 }}
       transition={{ duration: 0.4 }}
-      onPointerDown={handleTap}
-      onClick={handleTap}
-      onTouchEnd={handleTap}
-      // iOS Safari の transition 中の完全透明要素はクリックを拾わないことがあるため
-      // pointer-events: auto を明示し、touchAction: manipulation で 300ms 遅延も回避
-      style={{ pointerEvents: 'auto', touchAction: 'manipulation', cursor: 'pointer' }}
     >
       {/* 背景デコレーション */}
       <div className="idle-bg-deco" aria-hidden="true">
@@ -56,6 +50,18 @@ export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
           <span key={i} className={`idle-heart idle-heart--${i}`}>{h}</span>
         ))}
       </div>
+
+      {/* タップ受信用のネイティブ button オーバーレイ (画面全体を覆う)
+          motion.div の transition 中の透明要素クリック失敗を回避するため
+          native button を最前面に置いて確実にタップを取る */}
+      <button
+        type="button"
+        className="idle-tap-target"
+        onClick={handleTap}
+        onTouchEnd={(e) => { e.preventDefault(); handleTap(); }}
+        onPointerDown={handleTap}
+        aria-label="タップして開始"
+      />
     </motion.div>
   );
 }

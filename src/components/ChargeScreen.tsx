@@ -48,30 +48,14 @@ export default function ChargeScreen({
     onPhaseChangeRef.current = onPhaseChange;
   }, [onPhaseChange]);
 
-  // 100% 到達後の遷移を rAF + setTimeout の二重保険で発火させる。
-  // iOS Safari ではジェスチャー認識やバックグラウンドスロットリングで
-  // setTimeout 単独だと遅延・破棄されることがあるため。
-  // duration は speed の影響を受けず固定 (600ms) にして「絶対に発火」を優先。
+  // 100% 到達したら【即座に】画面遷移を発火する。
+  // iOS Safari のジェスチャー認識中は setTimeout/rAF が止まることがあるため、
+  // タメを完全に諦めて同期的に setPhase を呼ぶ。「タメ」感は AnimatePresence の
+  // exit/enter アニメで自然に出る (Charge exit duration 0.3 + Cake enter spring)。
   const fireTransitionWithSafety = useCallback(() => {
     if (transitionFiredRef.current) return;
-    const startTime = performance.now();
-    const DURATION_MS = 600;
-    const trigger = () => {
-      if (transitionFiredRef.current) return;
-      transitionFiredRef.current = true;
-      onPhaseChangeRef.current();
-    };
-    const rafLoop = () => {
-      if (transitionFiredRef.current) return;
-      if (performance.now() - startTime >= DURATION_MS) {
-        trigger();
-      } else {
-        requestAnimationFrame(rafLoop);
-      }
-    };
-    requestAnimationFrame(rafLoop);
-    // 保険: rAF が止まる/コールバックが詰まる場合に備え setTimeout で強制発火
-    setTimeout(trigger, DURATION_MS + 250);
+    transitionFiredRef.current = true;
+    onPhaseChangeRef.current();
   }, []);
 
   // 100% 到達時のコールバック（useSwipeCharge から同期的に呼ばれる）

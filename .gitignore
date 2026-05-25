@@ -15,6 +15,9 @@ dist-ssr
 # 写真の原本（public/photos/ にコピー済み、Public リポに原本は含めない）
 source/
 
+# Claude Code ハーネス内部状態
+.claude/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

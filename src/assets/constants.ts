@@ -9,7 +9,7 @@ export const PHOTOS = Array.from(
 
 export const SOUNDS = {
   // BGM
-  intro_bgm: `${BASE}sounds/intro_bgm.wav`, // 画面1-3 用ループBGM
+  intro_bgm: `${BASE}sounds/intro_bgm.mp3`, // 画面1-3 用ループBGM (128kbps mp3 / 1.9MB)
   bgm: `${BASE}sounds/bgm.mp3`,             // 画面4 バースデーソング
   // ループ系
   blow: `${BASE}sounds/blow.wav`,

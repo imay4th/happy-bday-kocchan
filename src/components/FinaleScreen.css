@@ -147,17 +147,17 @@
   text-align: center;
 }
 
-/* パクパクGIF (右→左に流れる) */
+/* パクパクGIF (右→左に流れる)
+   iOS Safari で GIF アニメが止まる現象を避けるため、will-change / filter は
+   付けない (両方とも GIF を GPU レイヤーに昇格させてアニメを停止させる原因)。
+   影は drop-shadow ではなく box-shadow っぽい外側の効果が欲しい場合は別 wrapper を使う。 */
 .finale-paku {
   position: absolute;
   right: -200px;
   z-index: 6;
   pointer-events: none;
   height: auto;
-  will-change: transform;
   image-rendering: auto;
-  /* 影で背景と分離 */
-  filter: drop-shadow(0 4px 12px rgba(107, 78, 125, 0.35));
 }
 
 /* 背景デコ */

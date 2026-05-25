@@ -241,7 +241,10 @@ export default function FinaleScreen({ onPhaseChange, replayCount, onConfetti }:
           <motion.img
             key={item.id}
             className="finale-paku"
-            src={PAKU_GIF}
+            // src に unique fragment (#id) を付けて iOS Safari の GIF キャッシュ共有問題を回避。
+            // 同じ URL の <img> を複数同時表示するとアニメが停止することがあるため
+            // フラグメントだけ変えて「別ソース」として独立デコードさせる
+            src={`${PAKU_GIF}#${item.id}`}
             alt=""
             style={{
               top: `${item.y}%`,

@@ -9,6 +9,7 @@ interface ChargeScreenProps {
   onPhaseChange: () => void;
   onLetterAppear?: () => void;
   onSwipeStart?: () => void;
+  onSwipeActive?: (active: boolean) => void; // スワイプ中 (指接触中) フラグ
   onHalfway?: () => void;
 }
 
@@ -26,6 +27,7 @@ export default function ChargeScreen({
   onPhaseChange,
   onLetterAppear,
   onSwipeStart,
+  onSwipeActive,
   onHalfway,
 }: ChargeScreenProps) {
   const speed = useSpeed();
@@ -42,14 +44,15 @@ export default function ChargeScreen({
     if (completedRef.current) return;
     completedRef.current = true;
     setIsFullyCharged(true);
+    onSwipeActive?.(false); // チャージループ音を停止
     setTimeout(() => {
       onPhaseChange();
     }, 1000 * speed);
-  }, [onPhaseChange, speed]);
+  }, [onPhaseChange, speed, onSwipeActive]);
 
   const { chargeAmount, bindHandlers: rawBindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
 
-  // 初回スワイプ開始時に効果音発火（pointerdown を wrap）
+  // 初回スワイプ開始時に SE 発火、毎回 pointerdown/up で active フラグを通知
   const bindHandlers = {
     ...rawBindHandlers,
     onPointerDown: (e: React.PointerEvent) => {
@@ -57,7 +60,12 @@ export default function ChargeScreen({
         swipeStartedRef.current = true;
         onSwipeStart?.();
       }
+      onSwipeActive?.(true); // チャージループ音を開始
       rawBindHandlers.onPointerDown(e);
+    },
+    onPointerUp: (e: React.PointerEvent) => {
+      onSwipeActive?.(false); // 指離したらチャージループ音を停止
+      rawBindHandlers.onPointerUp(e);
     },
   };
 

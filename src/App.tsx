@@ -46,6 +46,7 @@ function App() {
     void sound.loadSound('se_ding', SOUNDS.se_ding);
     void sound.loadSound('se_swipe', SOUNDS.se_swipe);
     void sound.loadSound('se_halfway', SOUNDS.se_halfway);
+    void sound.loadSound('se_charge_loop', SOUNDS.se_charge_loop);
   }, [sound]);
 
   const handlePhaseChange = useCallback(async (next: Phase) => {
@@ -115,6 +116,14 @@ function App() {
   const handleHalfway = useCallback(() => {
     sound.playSound('se_halfway', { volume: 0.7 });
   }, [sound]);
+  // スワイプ中のチャージループ音 (指を画面に置いている間ループ、離したら停止)
+  const handleSwipeActive = useCallback((active: boolean) => {
+    if (active) {
+      sound.playSound('se_charge_loop', { loop: true, volume: 0.35 });
+    } else {
+      sound.stopSound('se_charge_loop');
+    }
+  }, [sound]);
 
   // FinaleScreen 用効果音 callback
   const handleConfetti = useCallback(() => {
@@ -136,6 +145,7 @@ function App() {
                 onPhaseChange={handleCake}
                 onLetterAppear={handleLetterAppear}
                 onSwipeStart={handleSwipeStart}
+                onSwipeActive={handleSwipeActive}
                 onHalfway={handleHalfway}
               />
             </div>

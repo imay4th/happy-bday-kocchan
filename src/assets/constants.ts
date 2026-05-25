@@ -23,6 +23,7 @@ export const SOUNDS = {
   se_ding: `${BASE}sounds/se_ding.mp3`,       // ボタン決定音
   se_swipe: `${BASE}sounds/se_swipe.flac`,    // スワイプ開始
   se_halfway: `${BASE}sounds/se_halfway.mp3`, // 50%到達
+  se_charge_loop: `${BASE}sounds/se_charge_loop.wav`, // スワイプ中ループ
 } as const;
 
 export const HAPPY_BIRTHDAY_LETTERS = [

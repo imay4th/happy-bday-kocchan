@@ -11,8 +11,8 @@ interface ChargeScreenProps {
 interface FloatingLetter {
   id: number;
   char: string;
-  x: number;
-  y: number;
+  x: number; // viewport px
+  y: number; // viewport px
   color: string;
 }
 
@@ -24,6 +24,22 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
   const letterCountRef = useRef(0);
   const letterIdRef = useRef(0);
   const completedRef = useRef(false);
+
+  // ハート中心座標
+  const heartRef = useRef<HTMLDivElement>(null);
+  const [heartCenter, setHeartCenter] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const updateCenter = () => {
+      if (heartRef.current) {
+        const rect = heartRef.current.getBoundingClientRect();
+        setHeartCenter({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      }
+    };
+    updateCenter();
+    window.addEventListener('resize', updateCenter);
+    return () => window.removeEventListener('resize', updateCenter);
+  }, []);
 
   // 100% 達成時にフェーズ遷移
   useEffect(() => {
@@ -45,6 +61,9 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       const diff = expectedLetterCount - prevExpectedRef.current;
       prevExpectedRef.current = expectedLetterCount;
 
+      const vw = document.documentElement.clientWidth;
+      const vh = document.documentElement.clientHeight;
+
       setLetters((prev) => {
         const next = [...prev];
         for (let i = 0; i < diff; i++) {
@@ -52,8 +71,13 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
           const char = HAPPY_BIRTHDAY_LETTERS[idx];
           letterCountRef.current++;
           const id = letterIdRef.current++;
-          const x = 50 + (Math.random() - 0.5) * 40; // 30%〜70%
-          const y = 40 + (Math.random() - 0.5) * 40; // 20%〜60%
+
+          // 画面端寄りに出現（10〜90%、ハート付近を避けるためそのまま全域）
+          const xPct = 10 + Math.random() * 80;
+          const yPct = 10 + Math.random() * 80;
+          const x = xPct * vw / 100;
+          const y = yPct * vh / 100;
+
           const color = LETTER_COLORS[Math.floor(Math.random() * LETTER_COLORS.length)];
           next.push({ id, char, x, y, color });
         }
@@ -65,17 +89,20 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
   // ゲージの色計算（0→ピンク、50→ラベンダー、100→ミント）
   function getGaugeColor(amount: number): string {
     if (amount < 0.5) {
-      // ピンク → ラベンダー
       const t = amount * 2;
       return `hsl(${330 - t * 30}, ${100 - t * 10}%, ${70 + t * 5}%)`;
     } else {
-      // ラベンダー → ミント
       const t = (amount - 0.5) * 2;
       return `hsl(${300 + t * 80}, 90%, 75%)`;
     }
   }
 
   const gaugeColor = getGaugeColor(chargeAmount);
+
+  // ふち輝き: chargeAmount に応じて強くなる
+  const strokeOpacity = 0.6 + chargeAmount * 0.4;
+  const strokeWidth = 4 + chargeAmount * 4;
+  const glowStrength = 8 + chargeAmount * 24;
 
   return (
     <motion.div
@@ -87,28 +114,38 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       {...bindHandlers}
       style={{ touchAction: 'none' }}
     >
-      {/* 浮かぶ文字エフェクト */}
+      {/* 浮かぶ文字エフェクト（ハートへ吸い込まれる） */}
       <AnimatePresence>
-        {letters.map((letter) => (
-          <motion.span
-            key={letter.id}
-            className="charge-letter"
-            style={{
-              left: `${letter.x}%`,
-              top: `${letter.y}%`,
-              color: letter.color,
-            }}
-            initial={{ scale: 1.5, opacity: 1, y: 0, filter: 'blur(0px)' }}
-            animate={{ scale: 0.2, opacity: 0, y: -200, filter: 'blur(8px)' }}
-            exit={{}}
-            transition={{ duration: 1.2, ease: 'easeIn' }}
-            onAnimationComplete={() => {
-              setLetters((prev) => prev.filter((l) => l.id !== letter.id));
-            }}
-          >
-            {letter.char === ' ' ? ' ' : letter.char}
-          </motion.span>
-        ))}
+        {letters.map((letter) => {
+          const targetX = heartCenter.x - letter.x;
+          const targetY = heartCenter.y - letter.y;
+          return (
+            <motion.span
+              key={letter.id}
+              className="charge-letter"
+              style={{
+                left: letter.x,
+                top: letter.y,
+                color: letter.color,
+              }}
+              initial={{ scale: 1.5, opacity: 1, x: 0, y: 0, filter: 'blur(0px)' }}
+              animate={{
+                scale: 0.2,
+                opacity: 0,
+                x: targetX,
+                y: targetY,
+                filter: 'blur(8px)',
+              }}
+              exit={{}}
+              transition={{ duration: 1.2, ease: 'easeIn' }}
+              onAnimationComplete={() => {
+                setLetters((prev) => prev.filter((l) => l.id !== letter.id));
+              }}
+            >
+              {letter.char === ' ' ? ' ' : letter.char}
+            </motion.span>
+          );
+        })}
       </AnimatePresence>
 
       {/* 中央の指示テキスト */}
@@ -117,16 +154,19 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          ぐるぐるスワイプしてね✨
+          スワイプしてバースデーパワーをチャージしよう！
         </motion.p>
       </div>
 
-      {/* ハート型ゲージ */}
-      <div className="charge-gauge-wrap">
+      {/* ハート型ゲージ（画面中央やや上） */}
+      <div className="charge-gauge-wrap" ref={heartRef}>
         <svg
           className="charge-gauge-svg"
           viewBox="0 0 200 180"
           xmlns="http://www.w3.org/2000/svg"
+          style={{
+            filter: `drop-shadow(0 8px 20px rgba(255, 111, 168, 0.4)) drop-shadow(0 0 ${glowStrength}px white)`,
+          }}
         >
           <defs>
             <clipPath id="heart-clip">
@@ -156,12 +196,12 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
             clipPath="url(#heart-clip)"
           />
 
-          {/* ハート枠 */}
+          {/* ハート枠（輝き） */}
           <path
             d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z"
             fill="none"
-            stroke="rgba(255,255,255,0.8)"
-            strokeWidth="4"
+            stroke={`rgba(255,255,255,${strokeOpacity})`}
+            strokeWidth={strokeWidth}
           />
 
           {/* パーセント表示 */}

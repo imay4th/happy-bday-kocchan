@@ -10,6 +10,7 @@ interface CakeScreenProps {
 export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
   const [flameVisible, setFlameVisible] = useState(true);
   const [windVisible, setWindVisible] = useState(false);
+  const [isPreparing, setIsPreparing] = useState(false);
 
   const handleFlameClick = () => {
     if (!flameVisible) return;
@@ -19,9 +20,13 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
     setTimeout(() => {
       setWindVisible(false);
     }, 800);
+    // 200ms 後にタメ開始 → 600ms かけて縮む → 合計 800ms 後に遷移
+    setTimeout(() => {
+      setIsPreparing(true);
+    }, 200);
     setTimeout(() => {
       onPhaseChange();
-    }, 1000);
+    }, 800);
   };
 
   return (
@@ -32,13 +37,33 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
       exit={{ opacity: 0, y: -30 }}
       transition={{ duration: 0.4 }}
     >
+      {/* タメ演出オーバーレイ */}
+      <AnimatePresence>
+        {isPreparing && (
+          <motion.div
+            className="cake-prep-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.3 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* ケーキコンテナ */}
       <div className="cake-wrap">
         <motion.div
           className="cake-container"
           initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          transition={{ type: 'spring', bounce: 0.45, duration: 1.0 }}
+          animate={{
+            y: isPreparing ? 10 : 0,
+            scale: isPreparing ? 0.7 : 1,
+          }}
+          transition={
+            isPreparing
+              ? { duration: 0.6, ease: 'easeIn' }
+              : { type: 'spring', bounce: 0.45, duration: 1.0 }
+          }
         >
           {/* ケーキSVG */}
           <svg
@@ -61,48 +86,102 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             <circle cx="65" cy="108" r="4" fill="#FF7799" />
             <circle cx="100" cy="106" r="5" fill="#FF7799" />
             <circle cx="135" cy="108" r="4" fill="#FF7799" />
-            {/* ろうそく */}
-            <rect x="90" y="70" width="20" height="45" rx="5" fill="#FFF176" stroke="#F9C300" strokeWidth="2" />
-            {/* ろうそくの縦縞 */}
-            <line x1="97" y1="72" x2="97" y2="113" stroke="#F9C300" strokeWidth="1.5" strokeOpacity="0.5" />
-            {/* 炎グループ */}
+
+            {/* ろうそく「2」 */}
+            <text
+              x="78"
+              y="115"
+              textAnchor="middle"
+              fontSize="56"
+              fontWeight="900"
+              fill="#FFF176"
+              stroke="#F9C300"
+              strokeWidth="2"
+              fontFamily="'Mochiy Pop One', sans-serif"
+            >2</text>
+
+            {/* ろうそく「7」 */}
+            <text
+              x="122"
+              y="115"
+              textAnchor="middle"
+              fontSize="56"
+              fontWeight="900"
+              fill="#FFF176"
+              stroke="#F9C300"
+              strokeWidth="2"
+              fontFamily="'Mochiy Pop One', sans-serif"
+            >7</text>
+
+            {/* 炎グループ (2つ) */}
             <AnimatePresence>
               {flameVisible && (
-                <motion.g
-                  className="flame-group"
-                  initial={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ transformOrigin: '100px 60px' }}
-                >
-                  {/* 外炎 */}
-                  <motion.path
-                    d="M100 30 C108 42 115 50 112 62 C110 70 104 73 100 73 C96 73 90 70 88 62 C85 50 92 42 100 30 Z"
-                    fill="#FF8C00"
-                    className="flame-outer"
-                  />
-                  {/* 内炎 */}
-                  <motion.path
-                    d="M100 38 C105 46 109 54 107 62 C105 68 102 70 100 70 C98 70 95 68 93 62 C91 54 95 46 100 38 Z"
-                    fill="#FFD600"
-                    className="flame-inner"
-                  />
-                  {/* 炎コア */}
-                  <motion.ellipse
-                    cx="100"
-                    cy="65"
-                    rx="5"
-                    ry="6"
-                    fill="white"
-                    className="flame-core"
-                  />
-                </motion.g>
+                <>
+                  {/* 炎「2」用 */}
+                  <motion.g
+                    initial={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ transformOrigin: '78px 52px' }}
+                  >
+                    <motion.path
+                      d="M78 26 C86 38 93 46 90 58 C88 66 82 69 78 69 C74 69 68 66 66 58 C63 46 70 38 78 26 Z"
+                      fill="#FF8C00"
+                      className="flame-outer"
+                    />
+                    <motion.path
+                      d="M78 34 C83 42 87 50 85 58 C83 64 80 66 78 66 C76 66 73 64 71 58 C69 50 73 42 78 34 Z"
+                      fill="#FFD600"
+                      className="flame-inner"
+                    />
+                    <motion.ellipse
+                      cx="78"
+                      cy="61"
+                      rx="5"
+                      ry="6"
+                      fill="white"
+                      className="flame-core"
+                    />
+                  </motion.g>
+
+                  {/* 炎「7」用 */}
+                  <motion.g
+                    initial={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ transformOrigin: '122px 52px' }}
+                  >
+                    <motion.path
+                      d="M122 26 C130 38 137 46 134 58 C132 66 126 69 122 69 C118 69 112 66 110 58 C107 46 114 38 122 26 Z"
+                      fill="#FF8C00"
+                      className="flame-outer"
+                    />
+                    <motion.path
+                      d="M122 34 C127 42 131 50 129 58 C127 64 124 66 122 66 C120 66 117 64 115 58 C113 50 117 42 122 34 Z"
+                      fill="#FFD600"
+                      className="flame-inner"
+                    />
+                    <motion.ellipse
+                      cx="122"
+                      cy="61"
+                      rx="5"
+                      ry="6"
+                      fill="white"
+                      className="flame-core"
+                    />
+                  </motion.g>
+                </>
               )}
             </AnimatePresence>
+
             {/* ろうそく芯（炎消えた後） */}
             {!flameVisible && (
-              <line x1="100" y1="70" x2="100" y2="63" stroke="#555" strokeWidth="2" strokeLinecap="round" />
+              <>
+                <line x1="78" y1="66" x2="78" y2="59" stroke="#555" strokeWidth="2" strokeLinecap="round" />
+                <line x1="122" y1="66" x2="122" y2="59" stroke="#555" strokeWidth="2" strokeLinecap="round" />
+              </>
             )}
+
             {/* ケーキ正面デコ */}
             <circle cx="55" cy="160" r="6" fill="white" opacity="0.6" />
             <circle cx="80" cy="170" r="5" fill="white" opacity="0.5" />
@@ -121,7 +200,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               transition={{ repeat: Infinity, duration: 1.4 }}
               exit={{ opacity: 0 }}
             >
-              タップして炎を消してね！🎂
+              タップして火を吹き消そう！
             </motion.p>
           )}
         </AnimatePresence>

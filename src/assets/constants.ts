@@ -1,14 +1,16 @@
 export const CHARA_NAME = 'こっちゃん';
 
+const BASE = import.meta.env.BASE_URL; // dev='/', prod='/happy-bday-kocchan/'
+
 export const PHOTOS = Array.from(
   { length: 9 },
-  (_, i) => `/photos/pic-${String(i + 1).padStart(2, '0')}.jpg`,
+  (_, i) => `${BASE}photos/pic-${String(i + 1).padStart(2, '0')}.jpg`,
 );
 
 export const SOUNDS = {
-  charge: '/sounds/charge.mp3',
-  blow: '/sounds/blow.mp3',
-  fanfare: '/sounds/fanfare.mp3',
+  charge: `${BASE}sounds/charge.mp3`,
+  blow: `${BASE}sounds/blow.mp3`,
+  fanfare: `${BASE}sounds/fanfare.mp3`,
 } as const;
 
 export const HAPPY_BIRTHDAY_LETTERS = [

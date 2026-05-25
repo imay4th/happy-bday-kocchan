@@ -26,32 +26,14 @@ export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
 
       {/* メインコンテンツ */}
       <div className="idle-center">
-        <motion.div
-          className="idle-finger"
-          animate={{ y: [-8, 8, -8] }}
-          transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-          aria-hidden="true"
-        >
-          👆
-        </motion.div>
-
         <motion.h1
           className="idle-title"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', bounce: 0.5, delay: 0.2 }}
         >
-          画面を<br />スワイプ✨
+          画面をタップしてね✨
         </motion.h1>
-
-        <motion.div
-          className="idle-finger idle-finger--bottom"
-          animate={{ y: [8, -8, 8] }}
-          transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-          aria-hidden="true"
-        >
-          👆
-        </motion.div>
       </div>
 
       {/* ハートデコ */}

@@ -66,10 +66,10 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
   return (
     <motion.div
       className="finale-screen"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      initial={{ opacity: 0, scale: 0 }}
+      animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ type: 'spring', bounce: 0.7, duration: 0.8 }}
     >
       {/* 写真 */}
       <AnimatePresence>
@@ -99,7 +99,7 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
           className="finale-message"
           initial={{ y: 120, opacity: 0, scale: 0.8 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', bounce: 0.6, duration: 1.2 }}
+          transition={{ type: 'spring', bounce: 0.6, duration: 1.2, delay: 0.2 }}
         >
           <h1 className="finale-title-en">HAPPY BIRTHDAY</h1>
           <h2 className="finale-title-ja">{CHARA_NAME}!!</h2>

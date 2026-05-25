@@ -9,6 +9,15 @@
   overflow: hidden;
 }
 
+/* タメ演出オーバーレイ */
+.cake-prep-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
 .cake-wrap {
   display: flex;
   flex-direction: column;

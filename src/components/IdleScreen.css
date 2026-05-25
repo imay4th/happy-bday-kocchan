@@ -18,15 +18,6 @@
   position: relative;
 }
 
-.idle-finger {
-  font-size: 56px;
-  filter: drop-shadow(0 4px 8px rgba(255, 111, 168, 0.4));
-}
-
-.idle-finger--bottom {
-  transform: scaleX(-1) rotate(180deg);
-}
-
 .idle-title {
   font-family: var(--yk-font-pop);
   font-size: clamp(40px, 12vw, 72px);

@@ -1,0 +1,99 @@
+.charge-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--yk-bg);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* 浮かぶ文字 */
+.charge-letter {
+  position: absolute;
+  font-family: var(--yk-font-en);
+  font-size: 52px;
+  font-weight: 700;
+  pointer-events: none;
+  z-index: 10;
+  transform-origin: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ヒントテキスト */
+.charge-hint {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 5;
+}
+
+.charge-hint p {
+  font-family: var(--yk-font-pop);
+  font-size: clamp(18px, 5vw, 28px);
+  color: var(--yk-text);
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* ゲージ */
+.charge-gauge-wrap {
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  z-index: 5;
+}
+
+.charge-gauge-svg {
+  width: 160px;
+  height: 144px;
+  filter: drop-shadow(0 8px 20px rgba(255, 111, 168, 0.4));
+}
+
+.charge-gauge-text {
+  font-family: var(--yk-font-en);
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.charge-gauge-label {
+  font-family: var(--yk-font-pop);
+  font-size: 20px;
+  color: var(--yk-text);
+  margin: 0;
+}
+
+/* 背景デコ */
+.charge-bg-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.charge-deco {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.35;
+  animation: charge-deco-float 3s ease-in-out infinite;
+}
+
+.charge-deco--0 { top: 25%; left: 5%;  color: var(--yk-pink-deep);  animation-delay: 0s;   }
+.charge-deco--1 { top: 20%; left: 88%; color: var(--yk-lavender);   animation-delay: 0.8s; }
+.charge-deco--2 { top: 65%; left: 8%;  color: var(--yk-mint);       animation-delay: 1.5s; }
+.charge-deco--3 { top: 70%; left: 85%; color: var(--yk-pink-deep);  animation-delay: 0.4s; }
+.charge-deco--4 { top: 8%;  left: 50%; color: var(--yk-lavender);   animation-delay: 1.0s; }
+
+@keyframes charge-deco-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-10px) scale(1.15); }
+}

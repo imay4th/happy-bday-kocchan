@@ -1,0 +1,20 @@
+:root {
+  --yk-pink: #FFB6D9;
+  --yk-pink-light: #FFE4F1;
+  --yk-pink-deep: #FF6FA8;
+  --yk-lavender: #C5A3FF;
+  --yk-lavender-light: #E7D9FF;
+  --yk-mint: #B7F0DC;
+  --yk-sky: #A8E1FF;
+  --yk-cream: #FFF8E7;
+  --yk-white: #FFFFFF;
+  --yk-text: #6B4E7D;
+  --yk-text-soft: #9A82B5;
+  --yk-shadow-pink: 0 8px 24px rgba(255, 182, 217, 0.45);
+  --yk-shadow-lavender: 0 8px 24px rgba(197, 163, 255, 0.4);
+  --yk-bg: linear-gradient(135deg, #FFE4F1 0%, #E7D9FF 45%, #A8E1FF 100%);
+  --yk-font-pop: 'Mochiy Pop One', 'M PLUS Rounded 1c', system-ui, sans-serif;
+  --yk-font-body: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', system-ui, sans-serif;
+  --yk-font-en: 'Fredoka', 'Mochiy Pop One', system-ui, sans-serif;
+  --yk-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}

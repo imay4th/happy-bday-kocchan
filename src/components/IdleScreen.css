@@ -1,0 +1,100 @@
+.idle-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--yk-bg);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.idle-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  z-index: 2;
+  position: relative;
+}
+
+.idle-finger {
+  font-size: 56px;
+  filter: drop-shadow(0 4px 8px rgba(255, 111, 168, 0.4));
+}
+
+.idle-finger--bottom {
+  transform: scaleX(-1) rotate(180deg);
+}
+
+.idle-title {
+  font-family: var(--yk-font-pop);
+  font-size: clamp(40px, 12vw, 72px);
+  line-height: 1.3;
+  text-align: center;
+  margin: 0;
+  background: linear-gradient(135deg, var(--yk-pink-deep) 0%, var(--yk-lavender) 60%, var(--yk-sky) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 12px rgba(255, 111, 168, 0.3));
+}
+
+/* 背景キラキラ */
+.idle-bg-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.idle-sparkle {
+  position: absolute;
+  font-size: 24px;
+  opacity: 0.4;
+  animation: sparkle-float 3s ease-in-out infinite;
+}
+
+.idle-sparkle--0  { top: 8%;  left: 12%; animation-delay: 0s;    font-size: 20px; }
+.idle-sparkle--1  { top: 15%; left: 75%; animation-delay: 0.5s;  font-size: 28px; }
+.idle-sparkle--2  { top: 28%; left: 5%;  animation-delay: 1.0s;  font-size: 18px; }
+.idle-sparkle--3  { top: 35%; left: 88%; animation-delay: 1.5s;  font-size: 24px; }
+.idle-sparkle--4  { top: 55%; left: 10%; animation-delay: 0.8s;  font-size: 22px; }
+.idle-sparkle--5  { top: 60%; left: 82%; animation-delay: 0.3s;  font-size: 26px; }
+.idle-sparkle--6  { top: 72%; left: 20%; animation-delay: 1.2s;  font-size: 20px; }
+.idle-sparkle--7  { top: 78%; left: 70%; animation-delay: 0.7s;  font-size: 18px; }
+.idle-sparkle--8  { top: 88%; left: 35%; animation-delay: 0.2s;  font-size: 24px; }
+.idle-sparkle--9  { top: 5%;  left: 50%; animation-delay: 1.8s;  font-size: 16px; }
+.idle-sparkle--10 { top: 45%; left: 48%; animation-delay: 0.6s;  font-size: 14px; opacity: 0.25; }
+.idle-sparkle--11 { top: 92%; left: 85%; animation-delay: 1.4s;  font-size: 20px; }
+
+@keyframes sparkle-float {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0.4; }
+  50%       { transform: translateY(-12px) scale(1.2) rotate(15deg); opacity: 0.7; }
+}
+
+/* ハート装飾 */
+.idle-hearts {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.idle-heart {
+  position: absolute;
+  color: var(--yk-pink-deep);
+  animation: heart-drift 4s ease-in-out infinite;
+  opacity: 0.3;
+}
+
+.idle-heart--0 { font-size: 48px; top: 20%; left: 3%;  animation-delay: 0s;   }
+.idle-heart--1 { font-size: 32px; top: 40%; left: 92%; animation-delay: 1s;   }
+.idle-heart--2 { font-size: 56px; top: 70%; left: 5%;  animation-delay: 2s;   }
+.idle-heart--3 { font-size: 28px; top: 80%; left: 88%; animation-delay: 0.5s; }
+.idle-heart--4 { font-size: 40px; top: 10%; left: 85%; animation-delay: 1.5s; }
+
+@keyframes heart-drift {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  50%       { transform: translateY(-16px) scale(1.1); opacity: 0.5; }
+}

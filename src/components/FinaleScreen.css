@@ -1,0 +1,117 @@
+.finale-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  background: var(--yk-bg);
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* 写真カード */
+.finale-photo {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 16px;
+  box-shadow: var(--yk-shadow-pink);
+  overflow: hidden;
+  border: 4px solid white;
+  z-index: 3;
+}
+
+.finale-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* メッセージ */
+.finale-message-wrap {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 28px 24px 40px;
+  width: 100%;
+  background: linear-gradient(to top, rgba(255, 228, 241, 0.92) 0%, rgba(255, 228, 241, 0) 100%);
+}
+
+.finale-message {
+  text-align: center;
+}
+
+.finale-title-en {
+  font-family: var(--yk-font-en);
+  font-size: clamp(36px, 10vw, 60px);
+  font-weight: 700;
+  margin: 0 0 4px;
+  background: linear-gradient(135deg, var(--yk-pink-deep) 0%, var(--yk-lavender) 50%, var(--yk-sky) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 3px 8px rgba(255, 111, 168, 0.4));
+  line-height: 1.1;
+}
+
+.finale-title-ja {
+  font-family: var(--yk-font-pop);
+  font-size: clamp(32px, 9vw, 52px);
+  font-weight: 400;
+  color: var(--yk-pink-deep);
+  margin: 0;
+  text-shadow: 0 3px 10px rgba(255, 111, 168, 0.35);
+  line-height: 1.2;
+}
+
+/* 再遊ボタン */
+.finale-replay-btn {
+  font-family: var(--yk-font-pop);
+  font-size: 22px;
+  color: var(--yk-text);
+  background: white;
+  border: 3px solid var(--yk-pink);
+  border-radius: 24px;
+  padding: 14px 36px;
+  cursor: pointer;
+  box-shadow: var(--yk-shadow-pink);
+  transition: background 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.finale-replay-btn:hover {
+  background: var(--yk-pink-light);
+}
+
+/* 背景デコ */
+.finale-bg-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.finale-deco {
+  position: absolute;
+  opacity: 0.4;
+  animation: finale-deco-float 4s ease-in-out infinite;
+}
+
+.finale-deco--0 { font-size: 28px; top: 5%;  left: 5%;  color: var(--yk-pink-deep); animation-delay: 0s;   }
+.finale-deco--1 { font-size: 36px; top: 8%;  left: 85%; color: var(--yk-lavender);  animation-delay: 0.5s; }
+.finale-deco--2 { font-size: 24px; top: 18%; left: 15%; color: var(--yk-mint);      animation-delay: 1.0s; }
+.finale-deco--3 { font-size: 30px; top: 3%;  left: 55%; color: var(--yk-pink-deep); animation-delay: 1.5s; }
+.finale-deco--4 { font-size: 22px; top: 22%; left: 78%; color: var(--yk-sky);       animation-delay: 0.8s; }
+.finale-deco--5 { font-size: 26px; top: 12%; left: 38%; color: var(--yk-lavender);  animation-delay: 0.3s; }
+.finale-deco--6 { font-size: 20px; top: 28%; left: 3%;  color: var(--yk-mint);      animation-delay: 2.0s; }
+.finale-deco--7 { font-size: 32px; top: 15%; left: 92%; color: var(--yk-pink-deep); animation-delay: 1.2s; }
+
+@keyframes finale-deco-float {
+  0%, 100% { transform: translateY(0) scale(1) rotate(0deg);   opacity: 0.4; }
+  50%       { transform: translateY(-14px) scale(1.2) rotate(10deg); opacity: 0.65; }
+}

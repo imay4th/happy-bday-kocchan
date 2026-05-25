@@ -1,0 +1,112 @@
+.cake-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--yk-bg);
+  overflow: hidden;
+}
+
+.cake-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  position: relative;
+  z-index: 5;
+}
+
+.cake-container {
+  position: relative;
+}
+
+.cake-svg {
+  width: 220px;
+  height: 242px;
+  filter: drop-shadow(var(--yk-shadow-pink));
+}
+
+/* 炎アニメーション */
+.flame-outer {
+  animation: flame-sway 1s ease-in-out infinite;
+  transform-origin: 100px 73px;
+}
+
+.flame-inner {
+  animation: flame-sway 0.8s ease-in-out infinite reverse;
+  transform-origin: 100px 70px;
+}
+
+.flame-core {
+  animation: flame-pulse 0.6s ease-in-out infinite;
+}
+
+@keyframes flame-sway {
+  0%, 100% { transform: scaleY(1) rotate(-3deg); }
+  50%       { transform: scaleY(1.1) rotate(3deg); }
+}
+
+@keyframes flame-pulse {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+
+/* ヒントテキスト */
+.cake-hint {
+  font-family: var(--yk-font-pop);
+  font-size: clamp(16px, 4.5vw, 24px);
+  color: var(--yk-pink-deep);
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(255, 111, 168, 0.3);
+  white-space: nowrap;
+}
+
+/* 風エフェクト */
+.wind-effect {
+  position: absolute;
+  top: 35%;
+  left: 40%;
+  display: flex;
+  gap: 4px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.wind-char {
+  font-size: 32px;
+  color: rgba(200, 240, 255, 0.9);
+  text-shadow: 0 0 12px rgba(168, 225, 255, 0.8);
+}
+
+.wind-char--0 { opacity: 1; }
+.wind-char--1 { opacity: 0.7; font-size: 24px; margin-top: 8px; }
+.wind-char--2 { opacity: 0.5; font-size: 20px; margin-top: 14px; }
+
+/* 背景デコ */
+.cake-bg-deco {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cake-deco {
+  position: absolute;
+  font-size: 26px;
+  opacity: 0.35;
+  animation: cake-deco-float 3.5s ease-in-out infinite;
+}
+
+.cake-deco--0 { top: 10%; left: 8%;  color: var(--yk-pink-deep); animation-delay: 0s;   }
+.cake-deco--1 { top: 15%; left: 85%; color: var(--yk-lavender);  animation-delay: 0.7s; }
+.cake-deco--2 { top: 75%; left: 6%;  color: var(--yk-mint);      animation-delay: 1.4s; }
+.cake-deco--3 { top: 80%; left: 88%; color: var(--yk-pink-deep); animation-delay: 0.3s; }
+.cake-deco--4 { top: 5%;  left: 48%; color: var(--yk-lavender);  animation-delay: 1.8s; }
+
+@keyframes cake-deco-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%       { transform: translateY(-10px) scale(1.1); }
+}

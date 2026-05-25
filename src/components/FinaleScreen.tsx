@@ -78,15 +78,18 @@ export default function FinaleScreen({ onPhaseChange, replayCount, onConfetti }:
   //   - interval: 3秒 → 6秒
   //   - scale: 0.9-1.7 → 0.7-1.3 (112-208px)
   //   - 同時表示数の上限 3つ
+  //   - y 位置はチェキ (画面縦中央 28-72%) を避けて画面上端 3-22% or 下端 75-94% にランダム配置
   useEffect(() => {
     const spawn = () => {
       setPakuItems((prev) => {
         if (prev.length >= 3) return prev; // 同時表示数の上限
+        const isTopBand = Math.random() < 0.5;
+        const y = isTopBand ? 3 + Math.random() * 19 : 75 + Math.random() * 19;
         return [
           ...prev,
           {
             id: Date.now() + Math.random(),
-            y: 12 + Math.random() * 72,
+            y,
             scale: 0.7 + Math.random() * 0.6,
             duration: 5 + Math.random() * 3,
             distance: window.innerWidth + 400,

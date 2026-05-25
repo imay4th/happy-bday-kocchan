@@ -55,12 +55,12 @@ function App() {
       sound.playSound('se_sparkle', { volume: 0.7 }); // 画面2→3 シャララらーん
     }
     if (next === 'finale') {
-      // 画面4 バースデーソング BGM を 0.5秒遅らせて開始 (ファンファーレが不要なので導入感を残す)
+      // 画面4 バースデーソング BGM を 1秒遅らせて開始 (アーチ・チェキの spring 出現の余韻後に入る)
       if (bgmStartTimerRef.current) clearTimeout(bgmStartTimerRef.current);
       bgmStartTimerRef.current = setTimeout(() => {
         sound.playSound('bgm', { loop: true, volume: 0.6 });
         bgmStartTimerRef.current = null;
-      }, 500);
+      }, 1000);
     }
     if (next === 'idle') {
       // 「もう一度遊ぶ」押下時に BGM 開始予定が残っていればキャンセル + 既に鳴っていれば停止

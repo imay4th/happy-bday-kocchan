@@ -51,6 +51,7 @@ const CHIME_PRESETS: Record<ChimePreset, ChimeTone[]> = {
 
 interface UseSoundEffectResult {
   resume: () => Promise<void>;
+  warmup: () => void;
   loadSound: (name: string, url: string) => Promise<void>;
   playSound: (name: string, opts?: SoundOptions) => void;
   stopSound: (name: string) => void;
@@ -79,6 +80,28 @@ export function useSoundEffect(): UseSoundEffectResult {
     }
   }, [getCtx]);
 
+  // iOS Safari の AudioContext 初回アクティブ化バグ対策:
+  // ユーザータップの同期コンテキスト中に「無音バッファ」を即座に再生して
+  // AudioContext を物理的に起こす。これがないと初回の playSound が無音化する
+  // ことがある。
+  const warmup = useCallback((): void => {
+    try {
+      const ctx = getCtx();
+      // 同期的に resume を試みる (user gesture コンテキスト内ならこれで起きる)
+      if (ctx.state === 'suspended') {
+        void ctx.resume();
+      }
+      // 1 サンプルだけの無音バッファを即座に再生
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+    } catch (err) {
+      console.warn('[useSoundEffect] warmup failed:', err);
+    }
+  }, [getCtx]);
+
   const loadSound = useCallback(async (name: string, url: string): Promise<void> => {
     try {
       const ctx = getCtx();
@@ -103,6 +126,10 @@ export function useSoundEffect(): UseSoundEffectResult {
     }
     try {
       const ctx = getCtx();
+      // iOS Safari の保険: AudioContext が suspended なら毎回 resume を試みる
+      if (ctx.state === 'suspended') {
+        void ctx.resume();
+      }
       // 既存のソースを停止
       if (entry.source) {
         try { entry.source.stop(); } catch { /* already stopped */ }
@@ -163,7 +190,7 @@ export function useSoundEffect(): UseSoundEffectResult {
   // ここでメモ化しないと App.tsx の sound 依存 useCallback が毎レンダー再生成され、
   // 子コンポーネントの useEffect 依存に乗ったタイマーが clear されてしまう。
   return useMemo(
-    () => ({ resume, loadSound, playSound, stopSound, playChime }),
-    [resume, loadSound, playSound, stopSound, playChime],
+    () => ({ resume, warmup, loadSound, playSound, stopSound, playChime }),
+    [resume, warmup, loadSound, playSound, stopSound, playChime],
   );
 }

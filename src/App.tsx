@@ -69,10 +69,14 @@ function App() {
     void handlePhaseChange('finale');
   }, [handlePhaseChange]);
 
-  // CakeScreen のケーキタップ時に AudioContext.resume() を呼ぶ
-  // (ユーザーの最初の user gesture なのでこれ以降の音声再生が許可される)
+  // CakeScreen のケーキタップ時 (= ユーザーの最初の user gesture) に
+  // AudioContext を物理的にアクティブ化する。
+  // iOS Safari は resume() の Promise 解決前 / 解決後の初回 playSound が
+  // 無音化されることがあるため、warmup (1サンプル無音バッファ即時再生) で
+  // 確実に AudioContext を起こす。
   const handleBlow = useCallback(() => {
-    void sound.resume();
+    sound.warmup(); // 同期 user-gesture 内で AudioContext を起こす (最重要)
+    void sound.resume(); // 念のため非同期 resume も並行で
   }, [sound]);
 
   // FinaleScreen 用クラッカー音 (紙吹雪3波と同期)

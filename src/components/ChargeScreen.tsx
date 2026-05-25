@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeCharge } from '../hooks/useSwipeCharge';
 import { HAPPY_BIRTHDAY_LETTERS, SWIPE_THRESHOLD_PER_LETTER } from '../assets/constants';
+import { useSpeed } from '../contexts/SpeedContext';
 import './ChargeScreen.css';
 
 interface ChargeScreenProps {
@@ -20,7 +21,9 @@ const LETTER_COLORS = ['var(--yk-pink-deep)', 'var(--yk-lavender)', 'var(--yk-mi
 
 export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
   const { chargeAmount, bindHandlers } = useSwipeCharge();
+  const speed = useSpeed();
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
+  const [isFullyCharged, setIsFullyCharged] = useState(false);
   const letterCountRef = useRef(0);
   const letterIdRef = useRef(0);
   const completedRef = useRef(false);
@@ -41,15 +44,17 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
     return () => window.removeEventListener('resize', updateCenter);
   }, []);
 
-  // 100% 達成時にフェーズ遷移
+  // 100% 達成時に発光エフェクト → フェーズ遷移（D）
   useEffect(() => {
     if (chargeAmount >= 1 && !completedRef.current) {
       completedRef.current = true;
-      setTimeout(() => {
+      setIsFullyCharged(true);
+      const timer = setTimeout(() => {
         onPhaseChange();
-      }, 500);
+      }, 1000 * speed);
+      return () => clearTimeout(timer);
     }
-  }, [chargeAmount, onPhaseChange]);
+  }, [chargeAmount, onPhaseChange, speed]);
 
   // 累積距離に応じて文字を出現させる
   const totalDistance = chargeAmount * 8000;
@@ -110,7 +115,7 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.5 }}
       {...bindHandlers}
       style={{ touchAction: 'none' }}
     >
@@ -148,73 +153,103 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
         })}
       </AnimatePresence>
 
-      {/* 中央の指示テキスト */}
+      {/* 中央の指示テキスト（C: 改行） */}
       <div className="charge-hint">
         <motion.p
           animate={{ opacity: [0.6, 1, 0.6] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          スワイプしてバースデーパワーをチャージしよう！
+          スワイプしてバースデーパワーを<br />チャージしよう！
         </motion.p>
       </div>
 
       {/* ハート型ゲージ（画面中央やや上） */}
       <div className="charge-gauge-wrap" ref={heartRef}>
-        <svg
-          className="charge-gauge-svg"
-          viewBox="0 0 200 180"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{
-            filter: `drop-shadow(0 8px 20px rgba(255, 111, 168, 0.4)) drop-shadow(0 0 ${glowStrength}px white)`,
-          }}
+        {/* D: 100% 達成時の発光リング3連 */}
+        {isFullyCharged && (
+          <div className="charge-burst-container">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="charge-burst-ring"
+                initial={{ scale: 0.4, opacity: 1 }}
+                animate={{ scale: 3, opacity: 0 }}
+                transition={{ duration: 1.2, ease: 'easeOut', delay: i * 0.15 }}
+              />
+            ))}
+          </div>
+        )}
+
+        <motion.div
+          animate={
+            isFullyCharged
+              ? { scale: [1, 1.15, 1] }
+              : { scale: 1 }
+          }
+          transition={
+            isFullyCharged
+              ? { duration: 0.4, ease: 'easeOut' }
+              : {}
+          }
         >
-          <defs>
-            <clipPath id="heart-clip">
-              <path d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z" />
-            </clipPath>
-            <linearGradient id="gauge-fill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={gaugeColor} stopOpacity="0.9" />
-              <stop offset="100%" stopColor={gaugeColor} stopOpacity="0.7" />
-            </linearGradient>
-          </defs>
-
-          {/* ハート背景 */}
-          <path
-            d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z"
-            fill="rgba(255,255,255,0.3)"
-            stroke="rgba(255,255,255,0.6)"
-            strokeWidth="3"
-          />
-
-          {/* 塗り（下から）*/}
-          <rect
-            x="0"
-            y={180 - chargeAmount * 180}
-            width="200"
-            height={chargeAmount * 180}
-            fill="url(#gauge-fill)"
-            clipPath="url(#heart-clip)"
-          />
-
-          {/* ハート枠（輝き） */}
-          <path
-            d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z"
-            fill="none"
-            stroke={`rgba(255,255,255,${strokeOpacity})`}
-            strokeWidth={strokeWidth}
-          />
-
-          {/* パーセント表示 */}
-          <text
-            x="100"
-            y="95"
-            textAnchor="middle"
-            className="charge-gauge-text"
-            fill="white"
+          <svg
+            className="charge-gauge-svg"
+            viewBox="0 0 200 180"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              filter: isFullyCharged
+                ? `drop-shadow(0 8px 20px rgba(255, 111, 168, 0.4)) drop-shadow(0 0 ${glowStrength}px white) drop-shadow(0 0 40px white)`
+                : `drop-shadow(0 8px 20px rgba(255, 111, 168, 0.4)) drop-shadow(0 0 ${glowStrength}px white)`,
+            }}
           >
-            {Math.round(chargeAmount * 100)}%
-          </text>
-        </svg>
+            <defs>
+              <clipPath id="heart-clip">
+                <path d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z" />
+              </clipPath>
+              <linearGradient id="gauge-fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={gaugeColor} stopOpacity="0.9" />
+                <stop offset="100%" stopColor={gaugeColor} stopOpacity="0.7" />
+              </linearGradient>
+            </defs>
+
+            {/* ハート背景 */}
+            <path
+              d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z"
+              fill="rgba(255,255,255,0.3)"
+              stroke="rgba(255,255,255,0.6)"
+              strokeWidth="3"
+            />
+
+            {/* 塗り（下から）*/}
+            <rect
+              x="0"
+              y={180 - chargeAmount * 180}
+              width="200"
+              height={chargeAmount * 180}
+              fill="url(#gauge-fill)"
+              clipPath="url(#heart-clip)"
+            />
+
+            {/* ハート枠（輝き） */}
+            <path
+              d="M100 160 C60 130 20 100 20 65 C20 35 45 15 70 15 C83 15 93 22 100 30 C107 22 117 15 130 15 C155 15 180 35 180 65 C180 100 140 130 100 160 Z"
+              fill="none"
+              stroke={`rgba(255,255,255,${strokeOpacity})`}
+              strokeWidth={strokeWidth}
+            />
+
+            {/* パーセント表示 */}
+            <text
+              x="100"
+              y="95"
+              textAnchor="middle"
+              className="charge-gauge-text"
+              fill="white"
+            >
+              {Math.round(chargeAmount * 100)}%
+            </text>
+          </svg>
+        </motion.div>
 
         <p className="charge-gauge-label">チャージ中♡</p>
       </div>

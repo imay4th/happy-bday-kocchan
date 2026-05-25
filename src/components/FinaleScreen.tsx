@@ -2,13 +2,13 @@ import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { CHARA_NAME, PHOTOS } from '../assets/constants';
+import { useSpeed } from '../contexts/SpeedContext';
 import './FinaleScreen.css';
 
 interface FinaleScreenProps {
   onPhaseChange: () => void;
 }
 
-const ARCH_TEXT = `HAPPY BIRTHDAY ${CHARA_NAME}!!`;
 const PHOTO_DATE = '2026.5.26';
 
 function fireConfetti(): void {
@@ -20,6 +20,7 @@ function fireConfetti(): void {
 }
 
 export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
+  const speed = useSpeed();
   const [showButton, setShowButton] = useState(false);
   const [showDate, setShowDate] = useState(false);
   const firedRef = useRef(false);
@@ -31,14 +32,15 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
     if (firedRef.current) return;
     firedRef.current = true;
     fireConfetti();
-    // 写真スプリング: delay 0.4 + duration 0.8 = 約 1.2s で着地。一拍 (~200ms) 置いて 1.4s でワイプ開始
-    const dateTimer = setTimeout(() => setShowDate(true), 1400);
-    const btnTimer = setTimeout(() => setShowButton(true), 4200);
+    // G: 日付ワイプ開始 1800ms (speed 倍率対象)
+    const dateTimer = setTimeout(() => setShowDate(true), 1800 * speed);
+    // G: 再遊ボタン出現 5200ms (speed 倍率対象)
+    const btnTimer = setTimeout(() => setShowButton(true), 5200 * speed);
     return () => {
       clearTimeout(dateTimer);
       clearTimeout(btnTimer);
     };
-  }, []);
+  }, [speed]);
 
   return (
     <motion.div
@@ -46,14 +48,14 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
       initial={{ opacity: 0, scale: 0 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ type: 'spring', bounce: 0.7, duration: 0.8 }}
+      transition={{ type: 'spring', bounce: 0.7, duration: 1.2 * speed }}
     >
-      {/* アーチ状の虹色ギラギラメッセージ */}
+      {/* I: 上下二段アーチ */}
       <svg
         className="finale-arch"
-        viewBox="0 0 400 200"
+        viewBox="0 0 400 220"
         preserveAspectRatio="xMidYMid meet"
-        aria-label={ARCH_TEXT}
+        aria-label={`HAPPY BIRTHDAY ${CHARA_NAME}!!`}
       >
         <defs>
           <linearGradient id="rainbow-grad" x1="0" y1="0" x2="1" y2="0">
@@ -84,10 +86,14 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          <path id="arch-path" d="M 30 175 Q 200 -10 370 175" fill="none" />
+          {/* I: 上アーチ path */}
+          <path id="arch-path-top" d="M 30 110 Q 200 -30 370 110" fill="none" />
+          {/* I: 下アーチ path */}
+          <path id="arch-path-bottom" d="M 60 180 Q 200 85 340 180" fill="none" />
         </defs>
+        {/* I: 上アーチ: HAPPY BIRTHDAY */}
         <text
-          className="arch-text"
+          className="arch-text arch-text--top"
           fill="url(#rainbow-grad)"
           stroke="white"
           strokeWidth="1.5"
@@ -96,18 +102,33 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
           filter="url(#shiny-glow)"
           textAnchor="middle"
         >
-          <textPath href="#arch-path" startOffset="50%">
-            {ARCH_TEXT}
+          <textPath href="#arch-path-top" startOffset="50%">
+            HAPPY BIRTHDAY
+          </textPath>
+        </text>
+        {/* I: 下アーチ: こっちゃん!! */}
+        <text
+          className="arch-text arch-text--bottom"
+          fill="url(#rainbow-grad)"
+          stroke="white"
+          strokeWidth="1.5"
+          paintOrder="stroke"
+          strokeLinejoin="round"
+          filter="url(#shiny-glow)"
+          textAnchor="middle"
+        >
+          <textPath href="#arch-path-bottom" startOffset="50%">
+            {CHARA_NAME}!!
           </textPath>
         </text>
       </svg>
 
-      {/* チェキ風写真（x:'-50%' で水平センタリング） */}
+      {/* H: チェキを画面縦横ど真ん中に配置 */}
       <motion.div
         className="finale-cheki"
-        initial={{ opacity: 0, scale: 0, rotate: -10, x: '-50%', y: 60 }}
-        animate={{ opacity: 1, scale: 1, rotate: -3, x: '-50%', y: 0 }}
-        transition={{ type: 'spring', bounce: 0.5, duration: 0.85, delay: 0.4 }}
+        initial={{ opacity: 0, scale: 0, rotate: -10, x: '-50%', y: 'calc(-50% + 60px)' }}
+        animate={{ opacity: 1, scale: 1, rotate: -3, x: '-50%', y: '-50%' }}
+        transition={{ type: 'spring', bounce: 0.5, duration: 1.0 * speed, delay: 0.6 * speed }}
       >
         <div className="cheki-image-wrap">
           <img src={selectedPhoto} alt="" className="cheki-image" />
@@ -117,7 +138,7 @@ export default function FinaleScreen({ onPhaseChange }: FinaleScreenProps) {
             className="cheki-date"
             initial={{ clipPath: 'inset(0 100% 0 0)' }}
             animate={{ clipPath: showDate ? 'inset(0 0% 0 0)' : 'inset(0 100% 0 0)' }}
-            transition={{ duration: 1.4, ease: [0.65, 0, 0.35, 1] }}
+            transition={{ duration: 1.6 * speed, ease: [0.65, 0, 0.35, 1] }}
           >
             {PHOTO_DATE}
           </motion.span>

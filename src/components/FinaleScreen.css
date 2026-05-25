@@ -21,6 +21,7 @@
     drop-shadow(0 0 16px rgba(255, 217, 61, 0.6))
     drop-shadow(0 0 24px rgba(255, 111, 168, 0.5));
   animation: arch-shimmer 1.8s ease-in-out infinite alternate;
+  overflow: visible;
 }
 
 @keyframes arch-shimmer {
@@ -40,15 +41,24 @@
 
 .arch-text {
   font-family: var(--yk-font-pop), 'Fredoka', sans-serif;
-  font-size: 36px;
   font-weight: 900;
   letter-spacing: 1.5px;
 }
 
-/* チェキ風写真（translate(-50%) は Framer Motion の x:'-50%' で処理する） */
+/* I: 上段アーチ (HAPPY BIRTHDAY) */
+.arch-text--top {
+  font-size: 36px;
+}
+
+/* I: 下段アーチ (こっちゃん!!) */
+.arch-text--bottom {
+  font-size: 30px;
+}
+
+/* H: チェキ風写真 — 縦横ど真ん中（translate は Framer Motion の x/y で処理する） */
 .finale-cheki {
   position: absolute;
-  top: 38%;
+  top: 50%;
   left: 50%;
   transform-origin: center center;
   background: #FFFFFF;

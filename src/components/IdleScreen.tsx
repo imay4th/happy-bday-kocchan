@@ -32,7 +32,7 @@ export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', bounce: 0.5, delay: 0.2 }}
         >
-          画面をタップしてね✨
+          画面をタップ<br />してね✨
         </motion.h1>
       </div>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSpeed } from '../contexts/SpeedContext';
 import './CakeScreen.css';
 
 interface CakeScreenProps {
@@ -8,25 +9,32 @@ interface CakeScreenProps {
 }
 
 export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
+  const speed = useSpeed();
   const [flameVisible, setFlameVisible] = useState(true);
   const [windVisible, setWindVisible] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
+  const [candleTilted, setCandleTilted] = useState(false);
 
-  const handleFlameClick = () => {
-    if (!flameVisible) return;
+  // E: onPointerDown に変更 + 重複防止を isPreparing も含める
+  const handleFlameClick = (e: React.PointerEvent) => {
+    e.preventDefault();
+    if (!flameVisible || isPreparing) return;
     setFlameVisible(false);
     setWindVisible(true);
+    setCandleTilted(true);
     onBlow();
-    setTimeout(() => {
-      setWindVisible(false);
-    }, 800);
-    // 200ms 後にタメ開始 → 600ms かけて縮む → 合計 800ms 後に遷移
-    setTimeout(() => {
-      setIsPreparing(true);
-    }, 200);
-    setTimeout(() => {
-      onPhaseChange();
-    }, 800);
+    // 風が吹き終わる (G: 1200ms * speed)
+    const t1 = setTimeout(() => setWindVisible(false), 1200 * speed);
+    // 火消し後、火を見守る間 (G: 600ms) → タメ開始
+    const t2 = setTimeout(() => setIsPreparing(true), 600 * speed);
+    // タメ完了 → 遷移 (G: 合計 1800ms)
+    const t3 = setTimeout(() => onPhaseChange(), 1800 * speed);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   };
 
   return (
@@ -45,7 +53,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.3 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 1.0 }}
           />
         )}
       </AnimatePresence>
@@ -61,8 +69,8 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
           }}
           transition={
             isPreparing
-              ? { duration: 0.6, ease: 'easeIn' }
-              : { type: 'spring', bounce: 0.45, duration: 1.0 }
+              ? { duration: 1.0, ease: 'easeIn' }
+              : { type: 'spring', bounce: 0.45, duration: 1.4 }
           }
         >
           {/* ケーキSVG */}
@@ -70,7 +78,7 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             className="cake-svg"
             viewBox="0 0 200 220"
             xmlns="http://www.w3.org/2000/svg"
-            onClick={handleFlameClick}
+            onPointerDown={handleFlameClick}
             style={{ cursor: flameVisible ? 'pointer' : 'default' }}
           >
             {/* ベース（ピンク） */}
@@ -87,8 +95,8 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
             <circle cx="100" cy="106" r="5" fill="#FF7799" />
             <circle cx="135" cy="108" r="4" fill="#FF7799" />
 
-            {/* ろうそく「2」 */}
-            <text
+            {/* ろうそく「2」 (F: 風を受けて傾く) */}
+            <motion.text
               x="78"
               y="115"
               textAnchor="middle"
@@ -98,10 +106,13 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               stroke="#F9C300"
               strokeWidth="2"
               fontFamily="'Mochiy Pop One', sans-serif"
-            >2</text>
+              animate={candleTilted ? { rotate: [0, 6, 0] } : { rotate: 0 }}
+              transition={candleTilted ? { duration: 1.0, ease: 'easeInOut' } : {}}
+              style={{ transformOrigin: '78px 115px' }}
+            >2</motion.text>
 
-            {/* ろうそく「7」 */}
-            <text
+            {/* ろうそく「7」 (F: 風を受けて傾く) */}
+            <motion.text
               x="122"
               y="115"
               textAnchor="middle"
@@ -111,7 +122,10 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
               stroke="#F9C300"
               strokeWidth="2"
               fontFamily="'Mochiy Pop One', sans-serif"
-            >7</text>
+              animate={candleTilted ? { rotate: [0, 6, 0] } : { rotate: 0 }}
+              transition={candleTilted ? { duration: 1.0, ease: 'easeInOut', delay: 0.1 } : {}}
+              style={{ transformOrigin: '122px 115px' }}
+            >7</motion.text>
 
             {/* 炎グループ (2つ) */}
             <AnimatePresence>
@@ -120,8 +134,8 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
                   {/* 炎「2」用 */}
                   <motion.g
                     initial={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ duration: 0.3 }}
+                    exit={{ opacity: 0, scale: 0.3, x: 25, rotate: 40 }}
+                    transition={{ duration: 0.6 }}
                     style={{ transformOrigin: '78px 52px' }}
                   >
                     <motion.path
@@ -147,8 +161,8 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
                   {/* 炎「7」用 */}
                   <motion.g
                     initial={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    transition={{ duration: 0.3 }}
+                    exit={{ opacity: 0, scale: 0.3, x: 25, rotate: 40 }}
+                    transition={{ duration: 0.6 }}
                     style={{ transformOrigin: '122px 52px' }}
                   >
                     <motion.path
@@ -206,18 +220,21 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
         </AnimatePresence>
       </div>
 
-      {/* 風エフェクト */}
+      {/* F: 強化された風エフェクト */}
       <AnimatePresence>
         {windVisible && (
           <motion.div
             className="wind-effect"
-            initial={{ opacity: 0.8, x: 0 }}
-            animate={{ opacity: 0, x: 200 }}
+            initial={{ opacity: 1, x: '-20%' }}
+            animate={{ opacity: 0, x: '120%' }}
             exit={{}}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 1.2 * speed, ease: 'easeOut' }}
           >
-            {['〜', '〜', '〜'].map((w, i) => (
-              <span key={i} className={`wind-char wind-char--${i}`}>{w}</span>
+            {/* ふんわり雲 */}
+            <div className="wind-cloud" />
+            {/* 〜 と 💨 を複数散らす */}
+            {['〜', '💨', '〜', '〜', '💨'].map((w, i) => (
+              <span key={i} className={`wind-puff wind-puff--${i}`}>{w}</span>
             ))}
           </motion.div>
         )}

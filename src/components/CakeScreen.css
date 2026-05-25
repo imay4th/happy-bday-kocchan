@@ -73,26 +73,42 @@
   white-space: nowrap;
 }
 
-/* 風エフェクト */
+/* 風エフェクト (F: 強化版) */
 .wind-effect {
   position: absolute;
-  top: 35%;
-  left: 40%;
+  top: 40%;
+  left: 0;
+  right: 0;
   display: flex;
-  gap: 4px;
-  z-index: 20;
+  align-items: center;
+  justify-content: flex-start;
   pointer-events: none;
+  z-index: 15;
+  overflow: visible;
 }
 
-.wind-char {
-  font-size: 32px;
+.wind-cloud {
+  position: absolute;
+  left: 0;
+  top: -20px;
+  width: 60%;
+  height: 80px;
+  background: radial-gradient(ellipse, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0));
+  filter: blur(12px);
+}
+
+.wind-puff {
+  display: inline-block;
+  margin: 0 10px;
   color: rgba(200, 240, 255, 0.9);
   text-shadow: 0 0 12px rgba(168, 225, 255, 0.8);
 }
 
-.wind-char--0 { opacity: 1; }
-.wind-char--1 { opacity: 0.7; font-size: 24px; margin-top: 8px; }
-.wind-char--2 { opacity: 0.5; font-size: 20px; margin-top: 14px; }
+.wind-puff--0 { font-size: 44px; opacity: 1; }
+.wind-puff--1 { font-size: 36px; opacity: 0.9; margin-top: 12px; }
+.wind-puff--2 { font-size: 32px; opacity: 0.7; margin-top: -8px; }
+.wind-puff--3 { font-size: 28px; opacity: 0.6; margin-top: 16px; }
+.wind-puff--4 { font-size: 40px; opacity: 0.8; }
 
 /* 背景デコ */
 .cake-bg-deco {

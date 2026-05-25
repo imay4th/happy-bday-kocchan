@@ -11,6 +11,7 @@ export const SOUNDS = {
   charge: `${BASE}sounds/charge.mp3`,
   blow: `${BASE}sounds/blow.mp3`,
   fanfare: `${BASE}sounds/fanfare.mp3`,
+  bgm: `${BASE}sounds/bgm.mp3`,
 } as const;
 
 export const HAPPY_BIRTHDAY_LETTERS = [

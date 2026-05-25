@@ -35,23 +35,31 @@ function App() {
     void sound.loadSound('charge', SOUNDS.charge);
     void sound.loadSound('blow', SOUNDS.blow);
     void sound.loadSound('fanfare', SOUNDS.fanfare);
+    void sound.loadSound('bgm', SOUNDS.bgm);
   }, [sound]);
 
   const handlePhaseChange = useCallback(async (next: Phase) => {
     if (next === 'charge') {
       await sound.resume();
+      sound.playChime('pop');  // タップ時のポッ
       sound.playSound('charge', { loop: true, volume: 0.5 });
     }
     if (next === 'cake') {
       sound.stopSound('charge');
+      sound.playChime('sparkle');  // 達成時キラーン
+      setTimeout(() => sound.playChime('whoosh'), 300);  // ケーキ登場
     }
     if (next === 'finale') {
+      sound.playChime('twinkle');
       sound.playSound('fanfare', { volume: 0.8 });
+      sound.playSound('bgm', { loop: true, volume: 0.6 });
     }
     if (next === 'idle') {
       sound.stopSound('charge');
       sound.stopSound('blow');
       sound.stopSound('fanfare');
+      sound.stopSound('bgm');
+      sound.playChime('ding');
     }
     setPhase(next);
   }, [sound]);

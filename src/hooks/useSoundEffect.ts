@@ -11,11 +11,50 @@ interface SoundEntry {
   gainNode: GainNode | null;
 }
 
+type ChimePreset = 'pop' | 'twinkle' | 'sparkle' | 'whoosh' | 'ding';
+
+interface ChimeTone {
+  freq: number;
+  duration: number;
+  type: OscillatorType;
+  delay: number;
+  volume?: number;
+}
+
+const CHIME_PRESETS: Record<ChimePreset, ChimeTone[]> = {
+  pop: [
+    { freq: 700, duration: 0.06, type: 'square', delay: 0, volume: 0.3 },
+    { freq: 500, duration: 0.04, type: 'square', delay: 0.06, volume: 0.2 },
+  ],
+  twinkle: [
+    { freq: 1046, duration: 0.08, type: 'sine', delay: 0, volume: 0.25 },
+    { freq: 1318, duration: 0.08, type: 'sine', delay: 0.08, volume: 0.25 },
+    { freq: 1568, duration: 0.08, type: 'sine', delay: 0.16, volume: 0.25 },
+  ],
+  sparkle: [
+    { freq: 1046, duration: 0.1, type: 'sine', delay: 0, volume: 0.3 },
+    { freq: 1318, duration: 0.1, type: 'sine', delay: 0.08, volume: 0.3 },
+    { freq: 1568, duration: 0.1, type: 'sine', delay: 0.16, volume: 0.3 },
+    { freq: 2093, duration: 0.2, type: 'sine', delay: 0.24, volume: 0.35 },
+  ],
+  whoosh: [
+    { freq: 200, duration: 0.05, type: 'square', delay: 0, volume: 0.2 },
+    { freq: 400, duration: 0.05, type: 'square', delay: 0.05, volume: 0.2 },
+    { freq: 600, duration: 0.05, type: 'square', delay: 0.10, volume: 0.2 },
+    { freq: 800, duration: 0.05, type: 'square', delay: 0.15, volume: 0.2 },
+  ],
+  ding: [
+    { freq: 660, duration: 0.1, type: 'triangle', delay: 0, volume: 0.3 },
+    { freq: 880, duration: 0.1, type: 'triangle', delay: 0.1, volume: 0.3 },
+  ],
+};
+
 interface UseSoundEffectResult {
   resume: () => Promise<void>;
   loadSound: (name: string, url: string) => Promise<void>;
   playSound: (name: string, opts?: SoundOptions) => void;
   stopSound: (name: string) => void;
+  playChime: (preset: ChimePreset) => void;
 }
 
 export function useSoundEffect(): UseSoundEffectResult {
@@ -95,5 +134,30 @@ export function useSoundEffect(): UseSoundEffectResult {
     entry.gainNode = null;
   }, []);
 
-  return { resume, loadSound, playSound, stopSound };
+  const playChime = useCallback((preset: ChimePreset): void => {
+    try {
+      const ctx = getCtx();
+      const tones = CHIME_PRESETS[preset];
+      tones.forEach((tone) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = tone.type;
+        osc.frequency.value = tone.freq;
+        const vol = tone.volume ?? 0.3;
+        // エンベロープ（attack + release）
+        const startTime = ctx.currentTime + tone.delay;
+        gain.gain.setValueAtTime(0, startTime);
+        gain.gain.linearRampToValueAtTime(vol, startTime + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + tone.duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + tone.duration);
+      });
+    } catch (err) {
+      console.warn('[useSoundEffect] playChime failed:', err);
+    }
+  }, [getCtx]);
+
+  return { resume, loadSound, playSound, stopSound, playChime };
 }

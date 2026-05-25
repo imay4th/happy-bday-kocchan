@@ -5,6 +5,7 @@ interface SwipeChargeOptions {
   maxDistance?: number;
   decayRate?: number;
   idleDelay?: number;
+  onComplete?: () => void; // 100% 到達時に1度だけ呼ばれる
 }
 
 interface SwipeChargeResult {
@@ -28,6 +29,8 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
   const isDownRef = useRef(false);
   const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const decayIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // 100% 到達を内部で追跡（以降の減衰防止・コールバック1回限り保証）
+  const completedInternalRef = useRef(false);
 
   const clearIdleTimer = useCallback(() => {
     if (idleTimerRef.current !== null) {
@@ -44,9 +47,17 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
   }, []);
 
   const startDecay = useCallback(() => {
+    // 100% 到達後は減衰しない（保険）
+    if (completedInternalRef.current) return;
     clearDecayInterval();
     const TICK_MS = 50;
     decayIntervalRef.current = setInterval(() => {
+      // インターバル内でも完了済みなら即停止
+      if (completedInternalRef.current) {
+        clearInterval(decayIntervalRef.current!);
+        decayIntervalRef.current = null;
+        return;
+      }
       accumulatedRef.current = Math.max(
         maxDistance * 0.05,
         accumulatedRef.current - (decayRate * TICK_MS) / 1000,
@@ -56,6 +67,8 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
   }, [clearDecayInterval, decayRate, maxDistance]);
 
   const resetIdleTimer = useCallback(() => {
+    // 100% 到達後はアイドルタイマー・減衰を開始しない
+    if (completedInternalRef.current) return;
     clearIdleTimer();
     clearDecayInterval();
     idleTimerRef.current = setTimeout(() => {
@@ -85,10 +98,22 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
     const dy = e.clientY - lastPosRef.current.y;
     const delta = Math.hypot(dx, dy);
     accumulatedRef.current = Math.min(maxDistance, accumulatedRef.current + delta);
-    setChargeAmount(Math.min(1, accumulatedRef.current / maxDistance));
+    const newAmount = Math.min(1, accumulatedRef.current / maxDistance);
+    setChargeAmount(newAmount);
     lastPosRef.current = { x: e.clientX, y: e.clientY };
+
+    // 100% 到達検出（1度だけ、同期的に発火）
+    if (accumulatedRef.current >= maxDistance && !completedInternalRef.current) {
+      completedInternalRef.current = true;
+      // 以降の減衰を完全停止
+      clearIdleTimer();
+      clearDecayInterval();
+      opts.onComplete?.();
+      return;
+    }
+
     resetIdleTimer();
-  }, [maxDistance, resetIdleTimer]);
+  }, [maxDistance, resetIdleTimer, clearIdleTimer, clearDecayInterval, opts]);
 
   const onPointerUp: React.PointerEventHandler = useCallback(() => {
     isDownRef.current = false;

@@ -73,7 +73,7 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
       {/* 上下二段アーチ — 独立 motion.svg で同時 spring 出現 */}
       <motion.svg
         className="finale-arch"
-        viewBox="0 -20 400 240"
+        viewBox="0 0 400 240"
         preserveAspectRatio="xMidYMid meet"
         aria-label={`HAPPY BIRTHDAY ${CHARA_NAME}!!`}
         initial={{ opacity: 0, scale: 0.5 }}
@@ -109,10 +109,10 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
-          {/* 上アーチ — 両端を viewBox 端まで広げ、上方向に深くカーブ */}
-          <path id="arch-path-top" d="M 10 130 Q 200 -10 390 130" fill="none" />
-          {/* 下アーチ */}
-          <path id="arch-path-bottom" d="M 70 200 Q 200 110 330 200" fill="none" />
+          {/* 上アーチ — 左右対称 (20+380=400)、頂点 x=200 で中央 */}
+          <path id="arch-path-top" d="M 20 140 Q 200 0 380 140" fill="none" />
+          {/* 下アーチ — 左右対称 (60+340=400) */}
+          <path id="arch-path-bottom" d="M 60 210 Q 200 110 340 210" fill="none" />
         </defs>
         {/* 上アーチ: HAPPY BIRTHDAY */}
         <text

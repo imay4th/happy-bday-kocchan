@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeCharge } from '../hooks/useSwipeCharge';
 import { HAPPY_BIRTHDAY_LETTERS, SWIPE_THRESHOLD_PER_LETTER } from '../assets/constants';
@@ -20,13 +20,24 @@ interface FloatingLetter {
 const LETTER_COLORS = ['var(--yk-pink-deep)', 'var(--yk-lavender)', 'var(--yk-mint)'];
 
 export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
-  const { chargeAmount, bindHandlers } = useSwipeCharge();
   const speed = useSpeed();
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
   const [isFullyCharged, setIsFullyCharged] = useState(false);
   const letterCountRef = useRef(0);
   const letterIdRef = useRef(0);
   const completedRef = useRef(false);
+
+  // 100% 到達時のコールバック（useSwipeCharge から同期的に呼ばれる）
+  const handleFullyCharged = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    setIsFullyCharged(true);
+    setTimeout(() => {
+      onPhaseChange();
+    }, 1000 * speed);
+  }, [onPhaseChange, speed]);
+
+  const { chargeAmount, bindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
 
   // ハート中心座標
   const heartRef = useRef<HTMLDivElement>(null);

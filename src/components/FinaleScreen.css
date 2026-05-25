@@ -12,7 +12,7 @@
   top: 3%;
   left: 50%;
   transform: translateX(-50%);
-  width: min(96vw, 520px);
+  width: min(96vw, 480px);
   height: auto;
   z-index: 20;
   pointer-events: none;
@@ -52,7 +52,7 @@
 
 /* 下段アーチ (こっちゃん!!) */
 .arch-text--bottom {
-  font-size: 30px;
+  font-size: 32px;
 }
 
 /* チェキ風写真 — 縦横ど真ん中（translate は Framer Motion の x/y で処理する） */

@@ -14,6 +14,8 @@ interface SwipeChargeResult {
     onPointerDown: React.PointerEventHandler;
     onPointerMove: React.PointerEventHandler;
     onPointerUp: React.PointerEventHandler;
+    onPointerCancel: React.PointerEventHandler;
+    onPointerLeave: React.PointerEventHandler;
   };
 }
 
@@ -121,8 +123,30 @@ export function useSwipeCharge(opts: SwipeChargeOptions = {}): SwipeChargeResult
     resetIdleTimer();
   }, [resetIdleTimer]);
 
+  // iOS Safari のジェスチャー認識やシステム割込みで pointerup が来ず
+  // pointercancel になることへの保険。 pointer の追跡を確実に終わらせる
+  const onPointerCancel: React.PointerEventHandler = useCallback(() => {
+    isDownRef.current = false;
+    lastPosRef.current = null;
+    // 100% 到達後でなければ通常のリリースとして扱う
+    if (!completedInternalRef.current) {
+      resetIdleTimer();
+    }
+  }, [resetIdleTimer]);
+
+  // pointer が要素外に出た時の保険（iOS で pointercapture が解除される場合がある）
+  const onPointerLeave: React.PointerEventHandler = useCallback(() => {
+    if (!isDownRef.current) return;
+    // pointercapture があれば leave は基本来ないはずだが、念のため
+    isDownRef.current = false;
+    lastPosRef.current = null;
+    if (!completedInternalRef.current) {
+      resetIdleTimer();
+    }
+  }, [resetIdleTimer]);
+
   return {
     chargeAmount,
-    bindHandlers: { onPointerDown, onPointerMove, onPointerUp },
+    bindHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onPointerLeave },
   };
 }

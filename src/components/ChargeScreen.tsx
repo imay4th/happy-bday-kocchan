@@ -31,20 +31,48 @@ export default function ChargeScreen({
   onHalfway,
 }: ChargeScreenProps) {
   const speed = useSpeed();
+  void speed; // 100% 到達後の遷移は speed の影響を受けず固定タイミングで発火させる
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
   const [isFullyCharged, setIsFullyCharged] = useState(false);
   const letterCountRef = useRef(0);
   const letterIdRef = useRef(0);
   const completedRef = useRef(false);
+  const transitionFiredRef = useRef(false); // 100% 到達後の遷移発火を確実に1回だけにする
   const swipeStartedRef = useRef(false);
   const halfwayRef = useRef(false);
 
   // onPhaseChange を ref に保持: parent の再レンダーで参照が変わっても、
-  // 100% 達成時の setTimeout が cleanup で clear されないようにする保険
+  // 100% 達成時のタイマーが cleanup で clear されないようにする保険
   const onPhaseChangeRef = useRef(onPhaseChange);
   useEffect(() => {
     onPhaseChangeRef.current = onPhaseChange;
   }, [onPhaseChange]);
+
+  // 100% 到達後の遷移を rAF + setTimeout の二重保険で発火させる。
+  // iOS Safari ではジェスチャー認識やバックグラウンドスロットリングで
+  // setTimeout 単独だと遅延・破棄されることがあるため。
+  // duration は speed の影響を受けず固定 (600ms) にして「絶対に発火」を優先。
+  const fireTransitionWithSafety = useCallback(() => {
+    if (transitionFiredRef.current) return;
+    const startTime = performance.now();
+    const DURATION_MS = 600;
+    const trigger = () => {
+      if (transitionFiredRef.current) return;
+      transitionFiredRef.current = true;
+      onPhaseChangeRef.current();
+    };
+    const rafLoop = () => {
+      if (transitionFiredRef.current) return;
+      if (performance.now() - startTime >= DURATION_MS) {
+        trigger();
+      } else {
+        requestAnimationFrame(rafLoop);
+      }
+    };
+    requestAnimationFrame(rafLoop);
+    // 保険: rAF が止まる/コールバックが詰まる場合に備え setTimeout で強制発火
+    setTimeout(trigger, DURATION_MS + 250);
+  }, []);
 
   // 100% 到達時のコールバック（useSwipeCharge から同期的に呼ばれる）
   const handleFullyCharged = useCallback(() => {
@@ -52,10 +80,8 @@ export default function ChargeScreen({
     completedRef.current = true;
     setIsFullyCharged(true);
     onSwipeActive?.(false); // チャージループ音を停止
-    setTimeout(() => {
-      onPhaseChangeRef.current();
-    }, 1000 * speed);
-  }, [speed, onSwipeActive]);
+    fireTransitionWithSafety();
+  }, [onSwipeActive, fireTransitionWithSafety]);
 
   const { chargeAmount, bindHandlers: rawBindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
 
@@ -110,20 +136,16 @@ export default function ChargeScreen({
   }, []);
 
   // 100% 達成時に発光エフェクト → フェーズ遷移（D）
-  // 二重保険として useSwipeCharge.onComplete だけでなくここでも検出する。
-  // onPhaseChange は ref 経由で参照するため依存配列に含めない (含めると
-  // parent の再レンダーで setTimeout が clear されて遷移失敗する)
+  // 三重保険: useSwipeCharge.onComplete (pointermove 内) でも検出するが、
+  // 万一そのパスが走らなかった場合のために useEffect でも chargeAmount を監視
   useEffect(() => {
     if (chargeAmount >= 0.999 && !completedRef.current) {
       completedRef.current = true;
       setIsFullyCharged(true);
       onSwipeActive?.(false);
-      const t = setTimeout(() => {
-        onPhaseChangeRef.current();
-      }, 1000 * speed);
-      return () => clearTimeout(t);
+      fireTransitionWithSafety();
     }
-  }, [chargeAmount, speed, onSwipeActive]);
+  }, [chargeAmount, onSwipeActive, fireTransitionWithSafety]);
 
   // 累積距離に応じて文字を出現させる
   const totalDistance = chargeAmount * 8000;

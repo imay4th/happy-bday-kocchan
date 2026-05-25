@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import './IdleScreen.css';
 
@@ -8,6 +9,14 @@ interface IdleScreenProps {
 const SPARKLES = ['✨', '♡', '✦', '✨', '♡', '✦', '✨', '♡', '✦', '✨', '♡', '✦'];
 
 export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
+  // iOS Safari の取りこぼしを避けるため pointer/click/touch 3経路で受け、ref でガード
+  const tappedRef = useRef(false);
+  const handleTap = useCallback(() => {
+    if (tappedRef.current) return;
+    tappedRef.current = true;
+    onPhaseChange();
+  }, [onPhaseChange]);
+
   return (
     <motion.div
       className="idle-screen"
@@ -15,7 +24,12 @@ export default function IdleScreen({ onPhaseChange }: IdleScreenProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, scale: 1.1 }}
       transition={{ duration: 0.4 }}
-      onPointerDown={() => onPhaseChange()}
+      onPointerDown={handleTap}
+      onClick={handleTap}
+      onTouchEnd={handleTap}
+      // iOS Safari の transition 中の完全透明要素はクリックを拾わないことがあるため
+      // pointer-events: auto を明示し、touchAction: manipulation で 300ms 遅延も回避
+      style={{ pointerEvents: 'auto', touchAction: 'manipulation', cursor: 'pointer' }}
     >
       {/* 背景デコレーション */}
       <div className="idle-bg-deco" aria-hidden="true">

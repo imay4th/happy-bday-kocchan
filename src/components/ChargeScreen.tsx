@@ -7,6 +7,9 @@ import './ChargeScreen.css';
 
 interface ChargeScreenProps {
   onPhaseChange: () => void;
+  onLetterAppear?: () => void;
+  onSwipeStart?: () => void;
+  onHalfway?: () => void;
 }
 
 interface FloatingLetter {
@@ -19,13 +22,20 @@ interface FloatingLetter {
 
 const LETTER_COLORS = ['var(--yk-pink-deep)', 'var(--yk-lavender)', 'var(--yk-mint)'];
 
-export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
+export default function ChargeScreen({
+  onPhaseChange,
+  onLetterAppear,
+  onSwipeStart,
+  onHalfway,
+}: ChargeScreenProps) {
   const speed = useSpeed();
   const [letters, setLetters] = useState<FloatingLetter[]>([]);
   const [isFullyCharged, setIsFullyCharged] = useState(false);
   const letterCountRef = useRef(0);
   const letterIdRef = useRef(0);
   const completedRef = useRef(false);
+  const swipeStartedRef = useRef(false);
+  const halfwayRef = useRef(false);
 
   // 100% 到達時のコールバック（useSwipeCharge から同期的に呼ばれる）
   const handleFullyCharged = useCallback(() => {
@@ -37,25 +47,49 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
     }, 1000 * speed);
   }, [onPhaseChange, speed]);
 
-  const { chargeAmount, bindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
+  const { chargeAmount, bindHandlers: rawBindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
 
-  // ハート中心座標
-  const heartRef = useRef<HTMLDivElement>(null);
+  // 初回スワイプ開始時に効果音発火（pointerdown を wrap）
+  const bindHandlers = {
+    ...rawBindHandlers,
+    onPointerDown: (e: React.PointerEvent) => {
+      if (!swipeStartedRef.current) {
+        swipeStartedRef.current = true;
+        onSwipeStart?.();
+      }
+      rawBindHandlers.onPointerDown(e);
+    },
+  };
+
+  // 50% 到達時に効果音発火（1度だけ）
+  useEffect(() => {
+    if (chargeAmount >= 0.5 && !halfwayRef.current) {
+      halfwayRef.current = true;
+      onHalfway?.();
+    }
+  }, [chargeAmount, onHalfway]);
+
+  // 吸い込み中心座標 = ハート内の「○%」表示位置（SVG text の bbox 中心）
+  const percentTextRef = useRef<SVGTextElement>(null);
   const [heartCenter, setHeartCenter] = useState({ x: 0, y: 0 });
 
   useLayoutEffect(() => {
     const updateCenter = () => {
-      if (heartRef.current) {
-        const rect = heartRef.current.getBoundingClientRect();
+      if (percentTextRef.current) {
+        const rect = percentTextRef.current.getBoundingClientRect();
         setHeartCenter({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
       }
     };
     updateCenter();
-    // 念のため次フレームでも再取得（transition で要素が動いている場合に正確な位置を取得するため）
+    // ハート初期化アニメで位置が動くため、次フレーム + 短時間後にも再取得
     const raf = requestAnimationFrame(updateCenter);
+    const t1 = setTimeout(updateCenter, 300);
+    const t2 = setTimeout(updateCenter, 800);
     window.addEventListener('resize', updateCenter);
     return () => {
       cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
       window.removeEventListener('resize', updateCenter);
     };
   }, []);
@@ -82,6 +116,9 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       const diff = expectedLetterCount - prevExpectedRef.current;
       prevExpectedRef.current = expectedLetterCount;
 
+      // 文字出現音は diff によらず1回だけ（同時複数文字でも連射しない）
+      onLetterAppear?.();
+
       const vw = document.documentElement.clientWidth;
       const vh = document.documentElement.clientHeight;
 
@@ -105,7 +142,7 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
         return next;
       });
     }
-  }, [expectedLetterCount]);
+  }, [expectedLetterCount, onLetterAppear]);
 
   // ゲージの色計算（0→ピンク、50→ラベンダー、100→ミント）
   function getGaugeColor(amount: number): string {
@@ -180,7 +217,7 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
       </div>
 
       {/* ハート型ゲージ（画面中央やや上） */}
-      <div className="charge-gauge-wrap" ref={heartRef}>
+      <div className="charge-gauge-wrap">
         {/* D: 100% 達成時の発光リング3連 */}
         {isFullyCharged && (
           <div className="charge-burst-container">
@@ -254,8 +291,9 @@ export default function ChargeScreen({ onPhaseChange }: ChargeScreenProps) {
               strokeWidth={strokeWidth}
             />
 
-            {/* パーセント表示 */}
+            {/* パーセント表示（文字吸い込みのターゲット） */}
             <text
+              ref={percentTextRef}
               x="100"
               y="95"
               textAnchor="middle"

@@ -8,6 +8,7 @@ import './FinaleScreen.css';
 interface FinaleScreenProps {
   onPhaseChange: () => void;
   replayCount: number;
+  onConfetti?: () => void; // 紙吹雪3波と同期して呼ばれる
 }
 
 interface PakuItem {
@@ -21,15 +22,15 @@ interface PakuItem {
 const PHOTO_DATE = '2026.5.26';
 const PAKU_GIF = `${import.meta.env.BASE_URL as string}images/talking.gif`;
 
-function fireConfetti(): void {
+function fireConfetti(onPop?: () => void): void {
   const colors = ['#FFB6D9', '#C5A3FF', '#B7F0DC', '#A8E1FF', '#FF6FA8', '#FFD93D'];
   const opts = { colors, particleCount: 80, spread: 90, startVelocity: 40 };
-  setTimeout(() => confetti({ ...opts, origin: { x: 0.3, y: 0.6 } }), 0);
-  setTimeout(() => confetti({ ...opts, origin: { x: 0.7, y: 0.6 } }), 500);
-  setTimeout(() => confetti({ ...opts, origin: { x: 0.5, y: 0.3 }, particleCount: 120, spread: 130 }), 1000);
+  setTimeout(() => { confetti({ ...opts, origin: { x: 0.3, y: 0.6 } }); onPop?.(); }, 0);
+  setTimeout(() => { confetti({ ...opts, origin: { x: 0.7, y: 0.6 } }); onPop?.(); }, 500);
+  setTimeout(() => { confetti({ ...opts, origin: { x: 0.5, y: 0.3 }, particleCount: 120, spread: 130 }); onPop?.(); }, 1000);
 }
 
-export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScreenProps) {
+export default function FinaleScreen({ onPhaseChange, replayCount, onConfetti }: FinaleScreenProps) {
   const speed = useSpeed();
   const [showButton, setShowButton] = useState(false);
   const [showDate, setShowDate] = useState(false);
@@ -48,7 +49,7 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
   useEffect(() => {
     if (firedRef.current) return;
     firedRef.current = true;
-    fireConfetti();
+    fireConfetti(() => onConfetti?.());
     // 紙吹雪を継続発射（Finale が表示されている間ずっと）
     const colors = ['#FFB6D9', '#C5A3FF', '#B7F0DC', '#A8E1FF', '#FF6FA8', '#FFD93D'];
     const interval = setInterval(() => {
@@ -70,9 +71,10 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
       clearTimeout(dateTimer);
       clearTimeout(btnTimer);
     };
-  }, [speed]);
+  }, [speed, onConfetti]);
 
   // パクパクGIFを右から左に流す (1秒後に初回、その後 3秒毎にランダムなY/サイズ/速度で出現)
+  // GIF サイズ: 160px * (0.9-1.7) = 144-272px。速度: 5-8秒でゆったり通過
   useEffect(() => {
     const spawn = () => {
       setPakuItems((prev) => [
@@ -80,8 +82,8 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
         {
           id: Date.now() + Math.random(),
           y: 12 + Math.random() * 72,
-          scale: 0.5 + Math.random() * 0.7,
-          duration: 2.8 + Math.random() * 2.2,
+          scale: 0.9 + Math.random() * 0.8,
+          duration: 5 + Math.random() * 3,
           distance: window.innerWidth + 400,
         },
       ]);
@@ -234,7 +236,7 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
             alt=""
             style={{
               top: `${item.y}%`,
-              width: `${120 * item.scale}px`,
+              width: `${160 * item.scale}px`,
             }}
             initial={{ x: 0 }}
             animate={{ x: -item.distance }}

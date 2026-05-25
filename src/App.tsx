@@ -33,27 +33,35 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    // 効果音を事前ロード（ファイル未配置でも継続）
-    void sound.loadSound('charge', SOUNDS.charge);
+    // 効果音とBGMを事前ロード（ファイル未配置でも継続）
+    void sound.loadSound('intro_bgm', SOUNDS.intro_bgm);
+    void sound.loadSound('bgm', SOUNDS.bgm);
     void sound.loadSound('blow', SOUNDS.blow);
     void sound.loadSound('fanfare', SOUNDS.fanfare);
-    void sound.loadSound('bgm', SOUNDS.bgm);
+    void sound.loadSound('se_pop', SOUNDS.se_pop);
+    void sound.loadSound('se_letter', SOUNDS.se_letter);
+    void sound.loadSound('se_sparkle', SOUNDS.se_sparkle);
+    void sound.loadSound('se_cake', SOUNDS.se_cake);
+    void sound.loadSound('se_cracker', SOUNDS.se_cracker);
+    void sound.loadSound('se_ding', SOUNDS.se_ding);
+    void sound.loadSound('se_swipe', SOUNDS.se_swipe);
+    void sound.loadSound('se_halfway', SOUNDS.se_halfway);
   }, [sound]);
 
   const handlePhaseChange = useCallback(async (next: Phase) => {
     if (next === 'charge') {
       await sound.resume();
-      sound.playChime('pop');  // タップ時のポッ
-      sound.playSound('charge', { loop: true, volume: 0.5 });
+      sound.playSound('se_pop', { volume: 0.7 });           // タップ音
+      sound.playSound('intro_bgm', { loop: true, volume: 0.3 }); // 画面1-3 ループBGM
     }
     if (next === 'cake') {
-      sound.stopSound('charge');
-      sound.playChime('sparkle');  // 達成時キラーン
-      setTimeout(() => sound.playChime('whoosh'), 300);  // ケーキ登場
+      sound.playSound('se_sparkle', { volume: 0.7 });       // 100% 達成キラーン
+      setTimeout(() => sound.playSound('se_cake', { volume: 0.8 }), 300); // ケーキ登場
+      // intro_bgm は画面3 でも継続再生（停止しない）
     }
     if (next === 'finale') {
-      sound.playChime('twinkle');
-      sound.playSound('fanfare', { volume: 0.8 });
+      sound.stopSound('intro_bgm');                          // 画面1-3 BGM 停止
+      sound.playSound('fanfare', { volume: 0.7 });
       // BGM は 0.5秒遅らせて開始 (ファンファーレが鳴ってからすこし経って入る)
       if (bgmStartTimerRef.current) clearTimeout(bgmStartTimerRef.current);
       bgmStartTimerRef.current = setTimeout(() => {
@@ -62,16 +70,16 @@ function App() {
       }, 500);
     }
     if (next === 'idle') {
-      // BGM 開始予定が残っていたらキャンセル (500ms 以内に「もう一度遊ぶ」を押した場合の保険)
+      // BGM 開始予定が残っていたらキャンセル
       if (bgmStartTimerRef.current) {
         clearTimeout(bgmStartTimerRef.current);
         bgmStartTimerRef.current = null;
       }
-      sound.stopSound('charge');
+      sound.stopSound('intro_bgm');
       sound.stopSound('blow');
       sound.stopSound('fanfare');
       sound.stopSound('bgm');
-      sound.playChime('ding');
+      sound.playSound('se_ding', { volume: 0.7 });           // 戻る決定音
     }
     setPhase(next);
   }, [sound]);
@@ -97,6 +105,22 @@ function App() {
     sound.playSound('blow', { volume: 0.8 });
   }, [sound]);
 
+  // ChargeScreen 用効果音 callbacks
+  const handleLetterAppear = useCallback(() => {
+    sound.playSound('se_letter', { volume: 0.45 });
+  }, [sound]);
+  const handleSwipeStart = useCallback(() => {
+    sound.playSound('se_swipe', { volume: 0.5 });
+  }, [sound]);
+  const handleHalfway = useCallback(() => {
+    sound.playSound('se_halfway', { volume: 0.7 });
+  }, [sound]);
+
+  // FinaleScreen 用効果音 callback
+  const handleConfetti = useCallback(() => {
+    sound.playSound('se_cracker', { volume: 0.6 });
+  }, [sound]);
+
   return (
     <SpeedContext.Provider value={speed}>
       <div className="app">
@@ -108,7 +132,12 @@ function App() {
           )}
           {phase === 'charge' && (
             <div key="charge" className="phase-container">
-              <ChargeScreen onPhaseChange={handleCake} />
+              <ChargeScreen
+                onPhaseChange={handleCake}
+                onLetterAppear={handleLetterAppear}
+                onSwipeStart={handleSwipeStart}
+                onHalfway={handleHalfway}
+              />
             </div>
           )}
           {phase === 'cake' && (
@@ -118,7 +147,11 @@ function App() {
           )}
           {phase === 'finale' && (
             <div key="finale" className="phase-container">
-              <FinaleScreen onPhaseChange={handleIdle} replayCount={replayCount} />
+              <FinaleScreen
+                onPhaseChange={handleIdle}
+                replayCount={replayCount}
+                onConfetti={handleConfetti}
+              />
             </div>
           )}
         </AnimatePresence>

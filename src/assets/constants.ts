@@ -8,10 +8,21 @@ export const PHOTOS = Array.from(
 );
 
 export const SOUNDS = {
-  charge: `${BASE}sounds/charge.mp3`,
-  blow: `${BASE}sounds/blow.mp3`,
-  fanfare: `${BASE}sounds/fanfare.mp3`,
-  bgm: `${BASE}sounds/bgm.mp3`,
+  // BGM
+  intro_bgm: `${BASE}sounds/intro_bgm.wav`, // 画面1-3 用ループBGM
+  bgm: `${BASE}sounds/bgm.mp3`,             // 画面4 バースデーソング
+  // ループ系
+  blow: `${BASE}sounds/blow.wav`,
+  fanfare: `${BASE}sounds/fanfare.wav`,
+  // 効果音
+  se_pop: `${BASE}sounds/se_pop.mp3`,         // 画面1タップ
+  se_letter: `${BASE}sounds/se_letter.wav`,   // 文字出現
+  se_sparkle: `${BASE}sounds/se_sparkle.mp3`, // 100%達成
+  se_cake: `${BASE}sounds/se_cake.mp3`,       // ケーキ登場
+  se_cracker: `${BASE}sounds/se_cracker.wav`, // 紙吹雪クラッカー
+  se_ding: `${BASE}sounds/se_ding.mp3`,       // ボタン決定音
+  se_swipe: `${BASE}sounds/se_swipe.flac`,    // スワイプ開始
+  se_halfway: `${BASE}sounds/se_halfway.mp3`, // 50%到達
 } as const;
 
 export const HAPPY_BIRTHDAY_LETTERS = [

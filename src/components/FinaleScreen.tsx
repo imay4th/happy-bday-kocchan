@@ -73,23 +73,29 @@ export default function FinaleScreen({ onPhaseChange, replayCount, onConfetti }:
     };
   }, [speed, onConfetti]);
 
-  // パクパクGIFを右から左に流す (1秒後に初回、その後 3秒毎にランダムなY/サイズ/速度で出現)
-  // GIF サイズ: 160px * (0.9-1.7) = 144-272px。速度: 5-8秒でゆったり通過
+  // パクパクGIFを右から左に流す (1秒後に初回、その後 6秒毎)
+  // 頻度・密度を下げる方針:
+  //   - interval: 3秒 → 6秒
+  //   - scale: 0.9-1.7 → 0.7-1.3 (112-208px)
+  //   - 同時表示数の上限 3つ
   useEffect(() => {
     const spawn = () => {
-      setPakuItems((prev) => [
-        ...prev,
-        {
-          id: Date.now() + Math.random(),
-          y: 12 + Math.random() * 72,
-          scale: 0.9 + Math.random() * 0.8,
-          duration: 5 + Math.random() * 3,
-          distance: window.innerWidth + 400,
-        },
-      ]);
+      setPakuItems((prev) => {
+        if (prev.length >= 3) return prev; // 同時表示数の上限
+        return [
+          ...prev,
+          {
+            id: Date.now() + Math.random(),
+            y: 12 + Math.random() * 72,
+            scale: 0.7 + Math.random() * 0.6,
+            duration: 5 + Math.random() * 3,
+            distance: window.innerWidth + 400,
+          },
+        ];
+      });
     };
     const initialTimer = setTimeout(spawn, 1000);
-    const interval = setInterval(spawn, 3000);
+    const interval = setInterval(spawn, 6000);
     return () => {
       clearTimeout(initialTimer);
       clearInterval(interval);

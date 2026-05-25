@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useSoundEffect } from './hooks/useSoundEffect';
 import { SOUNDS } from './assets/constants';
@@ -12,12 +12,16 @@ import './App.css';
 
 type Phase = 'idle' | 'charge' | 'cake' | 'finale';
 
+// 採用する音は次の3つだけ:
+//   - se_pop:     画面1→2 遷移時のチュピッ
+//   - se_sparkle: 画面2→3 遷移時のシャララらーん (100% 達成)
+//   - se_cracker: 画面4 の紙吹雪クラッカー音
+// 他の効果音と BGM は配置済みだがロード/再生しない (うるさいので保留)。
+
 function App() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [replayCount, setReplayCount] = useState(0);
   const sound = useSoundEffect();
-  // 画面4 BGM 開始タイマー (0.5秒遅延)。idle 遷移時に必要なら cancel する
-  const bgmStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [speed, setSpeed] = useState<number>(() => {
     const saved = localStorage.getItem('debug_speed');
@@ -33,55 +37,21 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    // 効果音とBGMを事前ロード（ファイル未配置でも継続）
-    void sound.loadSound('intro_bgm', SOUNDS.intro_bgm);
-    void sound.loadSound('bgm', SOUNDS.bgm);
-    void sound.loadSound('blow', SOUNDS.blow);
-    void sound.loadSound('fanfare', SOUNDS.fanfare);
+    // 採用3音だけプリロード (他は配置済みだが使用しない)
     void sound.loadSound('se_pop', SOUNDS.se_pop);
-    void sound.loadSound('se_letter', SOUNDS.se_letter);
     void sound.loadSound('se_sparkle', SOUNDS.se_sparkle);
-    void sound.loadSound('se_cake', SOUNDS.se_cake);
     void sound.loadSound('se_cracker', SOUNDS.se_cracker);
-    void sound.loadSound('se_ding', SOUNDS.se_ding);
-    void sound.loadSound('se_swipe', SOUNDS.se_swipe);
-    void sound.loadSound('se_halfway', SOUNDS.se_halfway);
-    void sound.loadSound('se_charge_loop', SOUNDS.se_charge_loop);
   }, [sound]);
 
   const handlePhaseChange = useCallback(async (next: Phase) => {
     if (next === 'charge') {
       await sound.resume();
-      sound.playSound('se_pop', { volume: 0.7 });           // タップ音
-      sound.playSound('intro_bgm', { loop: true, volume: 0.3 }); // 画面1-3 ループBGM
+      sound.playSound('se_pop', { volume: 0.7 }); // 画面1→2 チュピッ
     }
     if (next === 'cake') {
-      sound.playSound('se_sparkle', { volume: 0.7 });       // 100% 達成キラーン
-      setTimeout(() => sound.playSound('se_cake', { volume: 0.8 }), 300); // ケーキ登場
-      // intro_bgm は画面3 でも継続再生（停止しない）
+      sound.playSound('se_sparkle', { volume: 0.7 }); // 画面2→3 シャララらーん
     }
-    if (next === 'finale') {
-      sound.stopSound('intro_bgm');                          // 画面1-3 BGM 停止
-      sound.playSound('fanfare', { volume: 0.7 });
-      // BGM は 0.5秒遅らせて開始 (ファンファーレが鳴ってからすこし経って入る)
-      if (bgmStartTimerRef.current) clearTimeout(bgmStartTimerRef.current);
-      bgmStartTimerRef.current = setTimeout(() => {
-        sound.playSound('bgm', { loop: true, volume: 0.6 });
-        bgmStartTimerRef.current = null;
-      }, 500);
-    }
-    if (next === 'idle') {
-      // BGM 開始予定が残っていたらキャンセル
-      if (bgmStartTimerRef.current) {
-        clearTimeout(bgmStartTimerRef.current);
-        bgmStartTimerRef.current = null;
-      }
-      sound.stopSound('intro_bgm');
-      sound.stopSound('blow');
-      sound.stopSound('fanfare');
-      sound.stopSound('bgm');
-      sound.playSound('se_ding', { volume: 0.7 });           // 戻る決定音
-    }
+    // finale / idle 遷移時の音は無し
     setPhase(next);
   }, [sound]);
 
@@ -102,30 +72,10 @@ function App() {
     void handlePhaseChange('finale');
   }, [handlePhaseChange]);
 
-  const handleBlow = useCallback(() => {
-    sound.playSound('blow', { volume: 0.8 });
-  }, [sound]);
+  // CakeScreen の onBlow は仕様で必須なので空関数を渡す (吹き消し音は無し)
+  const handleBlow = useCallback(() => { /* 吹き消し音は無し */ }, []);
 
-  // ChargeScreen 用効果音 callbacks
-  const handleLetterAppear = useCallback(() => {
-    sound.playSound('se_letter', { volume: 0.45 });
-  }, [sound]);
-  const handleSwipeStart = useCallback(() => {
-    sound.playSound('se_swipe', { volume: 0.5 });
-  }, [sound]);
-  const handleHalfway = useCallback(() => {
-    sound.playSound('se_halfway', { volume: 0.7 });
-  }, [sound]);
-  // スワイプ中のチャージループ音 (指を画面に置いている間ループ、離したら停止)
-  const handleSwipeActive = useCallback((active: boolean) => {
-    if (active) {
-      sound.playSound('se_charge_loop', { loop: true, volume: 0.35 });
-    } else {
-      sound.stopSound('se_charge_loop');
-    }
-  }, [sound]);
-
-  // FinaleScreen 用効果音 callback
+  // FinaleScreen 用クラッカー音 (紙吹雪3波と同期)
   const handleConfetti = useCallback(() => {
     sound.playSound('se_cracker', { volume: 0.6 });
   }, [sound]);
@@ -141,13 +91,7 @@ function App() {
           )}
           {phase === 'charge' && (
             <div key="charge" className="phase-container">
-              <ChargeScreen
-                onPhaseChange={handleCake}
-                onLetterAppear={handleLetterAppear}
-                onSwipeStart={handleSwipeStart}
-                onSwipeActive={handleSwipeActive}
-                onHalfway={handleHalfway}
-              />
+              <ChargeScreen onPhaseChange={handleCake} />
             </div>
           )}
           {phase === 'cake' && (

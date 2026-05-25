@@ -39,6 +39,13 @@ export default function ChargeScreen({
   const swipeStartedRef = useRef(false);
   const halfwayRef = useRef(false);
 
+  // onPhaseChange を ref に保持: parent の再レンダーで参照が変わっても、
+  // 100% 達成時の setTimeout が cleanup で clear されないようにする保険
+  const onPhaseChangeRef = useRef(onPhaseChange);
+  useEffect(() => {
+    onPhaseChangeRef.current = onPhaseChange;
+  }, [onPhaseChange]);
+
   // 100% 到達時のコールバック（useSwipeCharge から同期的に呼ばれる）
   const handleFullyCharged = useCallback(() => {
     if (completedRef.current) return;
@@ -46,9 +53,9 @@ export default function ChargeScreen({
     setIsFullyCharged(true);
     onSwipeActive?.(false); // チャージループ音を停止
     setTimeout(() => {
-      onPhaseChange();
+      onPhaseChangeRef.current();
     }, 1000 * speed);
-  }, [onPhaseChange, speed, onSwipeActive]);
+  }, [speed, onSwipeActive]);
 
   const { chargeAmount, bindHandlers: rawBindHandlers } = useSwipeCharge({ onComplete: handleFullyCharged });
 
@@ -103,16 +110,20 @@ export default function ChargeScreen({
   }, []);
 
   // 100% 達成時に発光エフェクト → フェーズ遷移（D）
+  // 二重保険として useSwipeCharge.onComplete だけでなくここでも検出する。
+  // onPhaseChange は ref 経由で参照するため依存配列に含めない (含めると
+  // parent の再レンダーで setTimeout が clear されて遷移失敗する)
   useEffect(() => {
     if (chargeAmount >= 0.999 && !completedRef.current) {
       completedRef.current = true;
       setIsFullyCharged(true);
+      onSwipeActive?.(false);
       const t = setTimeout(() => {
-        onPhaseChange();
+        onPhaseChangeRef.current();
       }, 1000 * speed);
       return () => clearTimeout(t);
     }
-  }, [chargeAmount, onPhaseChange, speed]);
+  }, [chargeAmount, speed, onSwipeActive]);
 
   // 累積距離に応じて文字を出現させる
   const totalDistance = chargeAmount * 8000;

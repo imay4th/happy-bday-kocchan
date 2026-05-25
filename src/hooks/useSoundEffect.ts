@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 
 interface SoundOptions {
   loop?: boolean;
@@ -159,5 +159,11 @@ export function useSoundEffect(): UseSoundEffectResult {
     }
   }, [getCtx]);
 
-  return { resume, loadSound, playSound, stopSound, playChime };
+  // 戻り値オブジェクトをメモ化して参照を安定させる。
+  // ここでメモ化しないと App.tsx の sound 依存 useCallback が毎レンダー再生成され、
+  // 子コンポーネントの useEffect 依存に乗ったタイマーが clear されてしまう。
+  return useMemo(
+    () => ({ resume, loadSound, playSound, stopSound, playChime }),
+    [resume, loadSound, playSound, stopSound, playChime],
+  );
 }

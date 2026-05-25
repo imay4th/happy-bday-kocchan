@@ -6,12 +6,13 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* アーチ虹色メッセージ（画面上部） */
+/* アーチ虹色メッセージ（画面上部）
+   translateX(-50%) は Framer Motion 側 (x: '-50%') で処理する。
+   CSS transform は motion.svg の transform と競合するため指定しない。 */
 .finale-arch {
   position: absolute;
   top: 3%;
   left: 50%;
-  transform: translateX(-50%);
   width: min(96vw, 480px);
   height: auto;
   z-index: 20;
@@ -144,6 +145,19 @@
   font-family: var(--yk-font-body);
   font-size: 13px;
   text-align: center;
+}
+
+/* パクパクGIF (右→左に流れる) */
+.finale-paku {
+  position: absolute;
+  right: -200px;
+  z-index: 6;
+  pointer-events: none;
+  height: auto;
+  will-change: transform;
+  image-rendering: auto;
+  /* 影で背景と分離 */
+  filter: drop-shadow(0 4px 12px rgba(107, 78, 125, 0.35));
 }
 
 /* 背景デコ */

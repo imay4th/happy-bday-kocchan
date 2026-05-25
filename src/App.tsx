@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { useSoundEffect } from './hooks/useSoundEffect';
 import { SOUNDS } from './assets/constants';
@@ -16,6 +16,8 @@ function App() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [replayCount, setReplayCount] = useState(0);
   const sound = useSoundEffect();
+  // 画面4 BGM 開始タイマー (0.5秒遅延)。idle 遷移時に必要なら cancel する
+  const bgmStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [speed, setSpeed] = useState<number>(() => {
     const saved = localStorage.getItem('debug_speed');
@@ -52,9 +54,19 @@ function App() {
     if (next === 'finale') {
       sound.playChime('twinkle');
       sound.playSound('fanfare', { volume: 0.8 });
-      sound.playSound('bgm', { loop: true, volume: 0.6 });
+      // BGM は 0.5秒遅らせて開始 (ファンファーレが鳴ってからすこし経って入る)
+      if (bgmStartTimerRef.current) clearTimeout(bgmStartTimerRef.current);
+      bgmStartTimerRef.current = setTimeout(() => {
+        sound.playSound('bgm', { loop: true, volume: 0.6 });
+        bgmStartTimerRef.current = null;
+      }, 500);
     }
     if (next === 'idle') {
+      // BGM 開始予定が残っていたらキャンセル (500ms 以内に「もう一度遊ぶ」を押した場合の保険)
+      if (bgmStartTimerRef.current) {
+        clearTimeout(bgmStartTimerRef.current);
+        bgmStartTimerRef.current = null;
+      }
       sound.stopSound('charge');
       sound.stopSound('blow');
       sound.stopSound('fanfare');

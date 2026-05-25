@@ -145,6 +145,11 @@ Phase 4:  3.4 → 4.1 → 4.2 → 4.3 → 4.4
 | 2026-05-25 | デザイン方針追記 | 「ゆめかわ系」テーマ（パステル + Mochiy Pop One + ハート/星）を CLAUDE.md / REQUIREMENTS.md に明記 |
 | 2026-05-25 | Phase 0.2 / 4.2 / 4.3 着手 | GitHub リポ `imay4th/happy-bday-kocchan` 作成・push、Pages ソースを Actions に設定、自動デプロイ workflow 起動 |
 | 2026-05-25 | Phase 4.3 完了 | 自動デプロイ成功 (build 11s + deploy 11s)、https://imay4th.github.io/happy-bday-kocchan/ で公開、HTTP 200 確認 |
+| 2026-05-25 | 手直し7件 (commit 751d351) | base path バグ修正 (画像404解消) / Idle「タップしてね」/ Charge指示変更 / ハート中央配置 + 文字吸い込み + ふち発光 / ろうそく「2」「7」+ 炎2本 / 「火を吹き消そう」/ 遷移タメ→爆発演出 |
+| 2026-05-25 | FinaleScreen 改装 (d5a988f) | SVG textPath でアーチ虹色ギラギラメッセージ / 写真ランダム1枚 / チェキ風白枠 / 「2026.5.26」を Caveat で左→右 clip-path ワイプ書き / Caveat + Permanent Marker フォント追加 |
+| 2026-05-25 | リポ片付け (c314705) | `.claude/scheduled_tasks.lock` 誤コミット → `.gitignore` で除外 |
+| 2026-05-25 | 速度可変デバッグ + 9件手直し (088e806) | SpeedContext + ?debug=1 で右上速度パネル(0.25-3.0、localStorage保存) / Idle・Charge指示文の改行 / ChargeScreen 100%達成時の3連光リング+ハート脈動 / CakeScreen onPointerDown化でタップ反応安定 / 風エフェクト強化(白い雲+〜💨+ろうそく/炎が風で揺れて吹き消される) / Cake→Finale 各タメ時間を大幅延長 / FinaleScreen チェキを縦横ど真ん中 / アーチを上下二段(HAPPY BIRTHDAY / こっちゃん!!) |
+| 2026-05-25 | 18件手直し (5ae6ea3) | タブタイトル「2026.5.26」へ秘匿 / Idle子要素 pointer-events:none / Charge ハート位置調整 + 指示文1行化 / 100%検出を>=0.999 + chargeAmountクランプ / heartCenter を useLayoutEffect + rAF で堅牢化 / Cake 全画面 onPointerDown + scale 0 まで縮小 + exit y動き削除 + 3層ゆめかわケーキ刷新(ピンク/ラベンダー/クリーム + ドリップ + 苺/チェリー) / Cake→Finale ケーキ縮みきり=チェキ飛び出し同期 / アーチ path拡張+fontSize縮小でH/Y収まり / アーチとチェキを同時 spring 飛び出し / 初回 pic-06.jpg 固定→再遊でランダム / 紙吹雪 1.8秒毎に上から継続発射 / もう一度遊ぶ♡ nowrap で1行化 / ボタン下に黒字「※違う画像が見れるかも！？」追加 |
 
 ---
 

@@ -10,7 +10,16 @@ interface FinaleScreenProps {
   replayCount: number;
 }
 
+interface PakuItem {
+  id: number;
+  y: number;       // 画面縦位置 %
+  scale: number;   // サイズ倍率
+  duration: number; // 横切る秒数
+  distance: number; // 画面横幅 + 余裕分
+}
+
 const PHOTO_DATE = '2026.5.26';
+const PAKU_GIF = `${import.meta.env.BASE_URL as string}images/talking.gif`;
 
 function fireConfetti(): void {
   const colors = ['#FFB6D9', '#C5A3FF', '#B7F0DC', '#A8E1FF', '#FF6FA8', '#FFD93D'];
@@ -24,6 +33,7 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
   const speed = useSpeed();
   const [showButton, setShowButton] = useState(false);
   const [showDate, setShowDate] = useState(false);
+  const [pakuItems, setPakuItems] = useState<PakuItem[]>([]);
   const firedRef = useRef(false);
 
   // 初回は pic-06.jpg 固定、再遊からはランダム
@@ -62,6 +72,28 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
     };
   }, [speed]);
 
+  // パクパクGIFを右から左に流す (1秒後に初回、その後 3秒毎にランダムなY/サイズ/速度で出現)
+  useEffect(() => {
+    const spawn = () => {
+      setPakuItems((prev) => [
+        ...prev,
+        {
+          id: Date.now() + Math.random(),
+          y: 12 + Math.random() * 72,
+          scale: 0.5 + Math.random() * 0.7,
+          duration: 2.8 + Math.random() * 2.2,
+          distance: window.innerWidth + 400,
+        },
+      ]);
+    };
+    const initialTimer = setTimeout(spawn, 1000);
+    const interval = setInterval(spawn, 3000);
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
     <motion.div
       className="finale-screen"
@@ -70,14 +102,16 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
       exit={{ opacity: 0 }}
       transition={{ type: 'spring', bounce: 0.7, duration: 0.4 * speed }}
     >
-      {/* 上下二段アーチ — 独立 motion.svg で同時 spring 出現 */}
+      {/* 上下二段アーチ — 独立 motion.svg で同時 spring 出現
+          CSS translateX(-50%) は Framer Motion の transform と競合するため、
+          x: '-50%' を Framer Motion 側に統合する */}
       <motion.svg
         className="finale-arch"
         viewBox="0 0 400 240"
         preserveAspectRatio="xMidYMid meet"
         aria-label={`HAPPY BIRTHDAY ${CHARA_NAME}!!`}
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.5, x: '-50%' }}
+        animate={{ opacity: 1, scale: 1, x: '-50%' }}
         transition={{ type: 'spring', bounce: 0.5, duration: 1.0 * speed, delay: 0 }}
       >
         <defs>
@@ -188,6 +222,28 @@ export default function FinaleScreen({ onPhaseChange, replayCount }: FinaleScree
             <p className="finale-replay-note">※違う画像が見れるかも！？</p>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* パクパクGIF を右から左に流す */}
+      <AnimatePresence>
+        {pakuItems.map((item) => (
+          <motion.img
+            key={item.id}
+            className="finale-paku"
+            src={PAKU_GIF}
+            alt=""
+            style={{
+              top: `${item.y}%`,
+              width: `${120 * item.scale}px`,
+            }}
+            initial={{ x: 0 }}
+            animate={{ x: -item.distance }}
+            transition={{ duration: item.duration, ease: 'linear' }}
+            onAnimationComplete={() => {
+              setPakuItems((prev) => prev.filter((p) => p.id !== item.id));
+            }}
+          />
+        ))}
       </AnimatePresence>
 
       {/* 背景デコ */}

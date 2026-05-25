@@ -18,6 +18,10 @@ source/
 # Claude Code ハーネス内部状態
 .claude/
 
+# Playwright テスト出力
+test-results/
+playwright-report/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

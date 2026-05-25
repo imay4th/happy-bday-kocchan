@@ -28,9 +28,9 @@
 - `npm create vite@latest . -- --template react-ts` で骨組み生成（一時ディレクトリ経由で安全に scaffold）
 - framer-motion + canvas-confetti を追加、`npm install` 完了
 
-### 0.2 GitHub Pages デプロイ設定 [S] — ⬜ 未着手（Phase 4 で実施）
-- `vite.config.ts` の `base` をリポジトリ名に合わせる（環境変数 GH_REPO で切替可能化済み）
-- GitHub Actions の deploy ワークフロー (`.github/workflows/deploy.yml`) は Phase 4.3 で作成
+### 0.2 GitHub Pages デプロイ設定 [S] — ✅ 完了
+- `vite.config.ts` の `base` を GH_REPO 環境変数で `/happy-bday-kocchan/` に切替
+- GitHub Actions ワークフロー `.github/workflows/deploy.yml` 作成（main push 時に自動ビルド + Pages デプロイ）
 
 ### 0.3 iOS Safari 縦画面最適化 [S] — ✅ 完了
 - `index.html` の viewport meta（`viewport-fit=cover`, `user-scalable=no`）、theme-color、apple-mobile-web-app-* メタ追加
@@ -98,13 +98,14 @@
 - 依存: 3.4
 - LAN経由で `npm run dev` を実機で確認、タッチ挙動・音・レイアウトをチェック
 
-### 4.2 GitHubリポジトリ作成 & 初回 push [S] — ⬜ 未着手
-- 依存: 4.1
-- `gh repo create` で公開リポジトリ作成、main へ push
+### 4.2 GitHubリポジトリ作成 & 初回 push [S] — ✅ 完了
+- `happy-bday-kocchan` を public で作成、main を push
+- gh CLI に workflow scope を追加（ブラウザ承認経由）
 
-### 4.3 GitHub Pages デプロイ [S] — ⬜ 未着手
-- 依存: 4.2
-- GitHub Actions が動作、公開URLが iPhone Safari から開けることを確認
+### 4.3 GitHub Pages デプロイ [S] — ✅ 完了
+- Pages ソースを Actions に設定、build/deploy 各約11秒で成功 (run 26400133454)
+- 公開 URL: https://imay4th.github.io/happy-bday-kocchan/ （HTTP 200 確認済み）
+- 注意: Node.js 20 actions が2026/06/02以降非推奨。必要に応じて FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true を deploy.yml に追加する
 
 ### 4.4 主役の写真・効果音差し替え [S] — ⬜ 未着手
 - 依存: 4.3
@@ -142,6 +143,8 @@ Phase 4:  3.4 → 4.1 → 4.2 → 4.3 → 4.4
 | 2026-05-25 | Phase 2.1〜2.3 | ケーキSVG + ろうそく炎 + タップ吹き消し実装 |
 | 2026-05-25 | Phase 3.1〜3.4 | フィナーレ（メッセージ + 写真9枚 + 紙吹雪 + 再遊ボタン）実装、build/lint PASS |
 | 2026-05-25 | デザイン方針追記 | 「ゆめかわ系」テーマ（パステル + Mochiy Pop One + ハート/星）を CLAUDE.md / REQUIREMENTS.md に明記 |
+| 2026-05-25 | Phase 0.2 / 4.2 / 4.3 着手 | GitHub リポ `imay4th/happy-bday-kocchan` 作成・push、Pages ソースを Actions に設定、自動デプロイ workflow 起動 |
+| 2026-05-25 | Phase 4.3 完了 | 自動デプロイ成功 (build 11s + deploy 11s)、https://imay4th.github.io/happy-bday-kocchan/ で公開、HTTP 200 確認 |
 
 ---
 
@@ -149,11 +152,11 @@ Phase 4:  3.4 → 4.1 → 4.2 → 4.3 → 4.4
 
 > **このセクションはセッション終了時に更新すること。次回セッション開始時にここから再開。**
 
-- [ ] **iPhone Safari 実機での動作確認** — `npm run dev:host` (起動済み) で表示される LAN URL を iPhone Safari で開き、4フェーズ通しで動作 / レイアウト / アニメーション速度を確認する
-- [ ] 効果音ファイル配置: `public/sounds/` に `charge.mp3` / `blow.mp3` / `fanfare.mp3` をユーザーが手動配置
-- [ ] Phase 0.2 + 4.2-4.3: GitHub リポジトリ作成 → GitHub Actions deploy ワークフロー追加 → GitHub Pages 公開
-- [ ] Phase 4.1 で見つかった問題があれば修正
-- [ ] Phase 4.4: 主役の写真・効果音差し替え（必要に応じて）
+- [ ] **iPhone Safari 実機での動作確認** — https://imay4th.github.io/happy-bday-kocchan/ を iPhone Safari で開き、4フェーズ通しで動作 / レイアウト / アニメーション速度・体感を確認する
+- [ ] Phase 4.1 で見つかった問題の修正（手直しリスト → ROADMAP に追記して個別対応）
+- [ ] 効果音ファイル配置: `public/sounds/` に `charge.mp3` / `blow.mp3` / `fanfare.mp3` を配置して push（自動デプロイ）
+- [ ] Phase 4.4: 必要に応じて写真や効果音を差し替え
+- [ ] (任意) deploy.yml の actions 各バージョン更新（Node.js 24 対応、2026/06/02 まで猶予あり）
 
 ---
 

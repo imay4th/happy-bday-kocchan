@@ -1,76 +1,108 @@
 .finale-screen {
   position: absolute;
   inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
   background: var(--yk-bg);
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* 写真カード */
-.finale-photo {
+/* アーチ虹色メッセージ（画面上部） */
+.finale-arch {
   position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 16px;
-  box-shadow: var(--yk-shadow-pink);
-  overflow: hidden;
-  border: 4px solid white;
-  z-index: 3;
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(96vw, 520px);
+  height: auto;
+  z-index: 20;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 0 8px rgba(255, 255, 255, 0.9))
+    drop-shadow(0 0 16px rgba(255, 217, 61, 0.6))
+    drop-shadow(0 0 24px rgba(255, 111, 168, 0.5));
+  animation: arch-shimmer 1.8s ease-in-out infinite alternate;
 }
 
-.finale-photo-img {
+@keyframes arch-shimmer {
+  0% {
+    filter:
+      drop-shadow(0 0 6px rgba(255, 255, 255, 0.7))
+      drop-shadow(0 0 12px rgba(255, 217, 61, 0.5))
+      drop-shadow(0 0 20px rgba(255, 111, 168, 0.4));
+  }
+  100% {
+    filter:
+      drop-shadow(0 0 14px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 26px rgba(157, 78, 221, 0.85))
+      drop-shadow(0 0 38px rgba(77, 150, 255, 0.7));
+  }
+}
+
+.arch-text {
+  font-family: var(--yk-font-pop), 'Fredoka', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+/* チェキ風写真（translate(-50%) は Framer Motion の x:'-50%' で処理する） */
+.finale-cheki {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform-origin: center center;
+  background: #FFFFFF;
+  padding: 14px 14px 60px 14px;
+  border-radius: 4px;
+  box-shadow:
+    0 16px 36px rgba(107, 78, 125, 0.4),
+    0 4px 10px rgba(107, 78, 125, 0.25),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+  width: min(72vw, 320px);
+  z-index: 8;
+}
+
+.cheki-image-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #EEE;
+  border-radius: 1px;
+}
+
+.cheki-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
 
-/* メッセージ */
-.finale-message-wrap {
-  position: relative;
-  z-index: 20;
+.cheki-bottom {
+  height: 56px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 28px 24px 40px;
-  width: 100%;
-  background: linear-gradient(to top, rgba(255, 228, 241, 0.92) 0%, rgba(255, 228, 241, 0) 100%);
+  justify-content: center;
+  padding-top: 10px;
 }
 
-.finale-message {
-  text-align: center;
-}
-
-.finale-title-en {
-  font-family: var(--yk-font-en);
-  font-size: clamp(36px, 10vw, 60px);
+.cheki-date {
+  font-family: 'Caveat', 'Permanent Marker', cursive;
+  font-size: 30px;
   font-weight: 700;
-  margin: 0 0 4px;
-  background: linear-gradient(135deg, var(--yk-pink-deep) 0%, var(--yk-lavender) 50%, var(--yk-sky) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 3px 8px rgba(255, 111, 168, 0.4));
-  line-height: 1.1;
+  color: #4A3A6B;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  display: inline-block;
+  /* 日付の擦れ感: ほんのり傾けて手書きっぽく */
+  transform: rotate(-2deg);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
 
-.finale-title-ja {
-  font-family: var(--yk-font-pop);
-  font-size: clamp(32px, 9vw, 52px);
-  font-weight: 400;
-  color: var(--yk-pink-deep);
-  margin: 0;
-  text-shadow: 0 3px 10px rgba(255, 111, 168, 0.35);
-  line-height: 1.2;
-}
-
-/* 再遊ボタン */
+/* 再遊ボタン（translateX(-50%) は Framer Motion 側で処理する） */
 .finale-replay-btn {
+  position: absolute;
+  bottom: max(8%, env(safe-area-inset-bottom, 16px));
+  left: 50%;
   font-family: var(--yk-font-pop);
   font-size: 22px;
   color: var(--yk-text);
@@ -82,9 +114,11 @@
   box-shadow: var(--yk-shadow-pink);
   transition: background 0.2s;
   -webkit-tap-highlight-color: transparent;
+  z-index: 30;
 }
 
-.finale-replay-btn:hover {
+.finale-replay-btn:hover,
+.finale-replay-btn:active {
   background: var(--yk-pink-light);
 }
 
@@ -104,14 +138,14 @@
 
 .finale-deco--0 { font-size: 28px; top: 5%;  left: 5%;  color: var(--yk-pink-deep); animation-delay: 0s;   }
 .finale-deco--1 { font-size: 36px; top: 8%;  left: 85%; color: var(--yk-lavender);  animation-delay: 0.5s; }
-.finale-deco--2 { font-size: 24px; top: 18%; left: 15%; color: var(--yk-mint);      animation-delay: 1.0s; }
-.finale-deco--3 { font-size: 30px; top: 3%;  left: 55%; color: var(--yk-pink-deep); animation-delay: 1.5s; }
-.finale-deco--4 { font-size: 22px; top: 22%; left: 78%; color: var(--yk-sky);       animation-delay: 0.8s; }
-.finale-deco--5 { font-size: 26px; top: 12%; left: 38%; color: var(--yk-lavender);  animation-delay: 0.3s; }
-.finale-deco--6 { font-size: 20px; top: 28%; left: 3%;  color: var(--yk-mint);      animation-delay: 2.0s; }
-.finale-deco--7 { font-size: 32px; top: 15%; left: 92%; color: var(--yk-pink-deep); animation-delay: 1.2s; }
+.finale-deco--2 { font-size: 24px; top: 78%; left: 15%; color: var(--yk-mint);      animation-delay: 1.0s; }
+.finale-deco--3 { font-size: 30px; top: 88%; left: 55%; color: var(--yk-pink-deep); animation-delay: 1.5s; }
+.finale-deco--4 { font-size: 22px; top: 82%; left: 78%; color: var(--yk-sky);       animation-delay: 0.8s; }
+.finale-deco--5 { font-size: 26px; top: 35%; left: 6%;  color: var(--yk-lavender);  animation-delay: 0.3s; }
+.finale-deco--6 { font-size: 20px; top: 35%; left: 90%; color: var(--yk-mint);      animation-delay: 2.0s; }
+.finale-deco--7 { font-size: 32px; top: 92%; left: 8%;  color: var(--yk-pink-deep); animation-delay: 1.2s; }
 
 @keyframes finale-deco-float {
   0%, 100% { transform: translateY(0) scale(1) rotate(0deg);   opacity: 0.4; }
-  50%       { transform: translateY(-14px) scale(1.2) rotate(10deg); opacity: 0.65; }
+  50%      { transform: translateY(-14px) scale(1.2) rotate(10deg); opacity: 0.65; }
 }

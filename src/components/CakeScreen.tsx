@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSpeed } from '../contexts/SpeedContext';
 import './CakeScreen.css';
@@ -15,26 +15,55 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
   const [isPreparing, setIsPreparing] = useState(false);
   const [candleTilted, setCandleTilted] = useState(false);
 
-  const handleFlameClick = (e: React.PointerEvent) => {
-    e.preventDefault();
-    if (!flameVisible || isPreparing) return;
+  // タップ多重発火と画面遷移の多重発火を防ぐ ref
+  const tappedRef = useRef(false);
+  const transitionFiredRef = useRef(false);
+
+  // parent の onPhaseChange が再生成されてもタイマーが消えないように ref に保持
+  const onPhaseChangeRef = useRef(onPhaseChange);
+  useEffect(() => {
+    onPhaseChangeRef.current = onPhaseChange;
+  }, [onPhaseChange]);
+
+  // 画面4 への遷移を rAF + setTimeout の三重保険で確実に発火
+  const fireFinaleTransition = useCallback(() => {
+    if (transitionFiredRef.current) return;
+    const startTime = performance.now();
+    const DURATION_MS = 1600; // ケーキが縮みきるまで
+    const trigger = () => {
+      if (transitionFiredRef.current) return;
+      transitionFiredRef.current = true;
+      onPhaseChangeRef.current();
+    };
+    const rafLoop = () => {
+      if (transitionFiredRef.current) return;
+      if (performance.now() - startTime >= DURATION_MS) {
+        trigger();
+      } else {
+        requestAnimationFrame(rafLoop);
+      }
+    };
+    requestAnimationFrame(rafLoop);
+    // 保険: rAF が止まる場合に備えた setTimeout (duration + 300ms)
+    setTimeout(trigger, DURATION_MS + 300);
+  }, []);
+
+  const handleTap = useCallback(() => {
+    if (tappedRef.current || !flameVisible || isPreparing) return;
+    tappedRef.current = true;
     setFlameVisible(false);
     setWindVisible(true);
     setCandleTilted(true);
     onBlow();
-    // 風が吹き終わる (1200ms * speed)
-    const t1 = setTimeout(() => setWindVisible(false), 1200 * speed);
+    // 風が吹き終わる (固定 1200ms、speed の影響を受けない)
+    setTimeout(() => setWindVisible(false), 1200);
     // 火消し後 600ms でタメ開始
-    const t2 = setTimeout(() => setIsPreparing(true), 600 * speed);
-    // 縮みきり = 600 + 1000 = 1600ms → Finale 開始
-    const t3 = setTimeout(() => onPhaseChange(), 1600 * speed);
+    setTimeout(() => setIsPreparing(true), 600);
+    // 画面4 遷移
+    fireFinaleTransition();
+  }, [flameVisible, isPreparing, onBlow, fireFinaleTransition]);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
-  };
+  void speed; // タップ後の演出は speed の影響を受けず固定タイミングで発火させる
 
   return (
     <motion.div
@@ -43,7 +72,6 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
-      onPointerDown={handleFlameClick}
       style={{ cursor: flameVisible ? 'pointer' : 'default' }}
     >
       {/* タメ演出オーバーレイ */}
@@ -292,6 +320,20 @@ export default function CakeScreen({ onPhaseChange, onBlow }: CakeScreenProps) {
           <span key={i} className={`cake-deco cake-deco--${i}`}>{s}</span>
         ))}
       </div>
+
+      {/* タップ受信用のネイティブ button オーバーレイ (画面全体を覆う)
+          iOS Safari の motion.div の transition 中の透明要素クリック失敗を回避するため
+          native button を最前面に置いて確実にタップを取る (3経路で受信) */}
+      {flameVisible && !isPreparing && (
+        <button
+          type="button"
+          className="cake-tap-target"
+          onClick={handleTap}
+          onTouchEnd={(e) => { e.preventDefault(); handleTap(); }}
+          onPointerDown={handleTap}
+          aria-label="ろうそくを吹き消す"
+        />
+      )}
     </motion.div>
   );
 }

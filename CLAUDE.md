@@ -61,3 +61,15 @@
 - `public/sounds/` 配下に配置（charge.mp3 / blow.mp3 / fanfare.mp3）
 - 実ファイルはユーザーが手動で配置するため、コード側はパスのみ参照
 - ファイル未配置時もアプリ自体は動作するよう、ロード失敗時のフォールバックを入れる
+
+## UI/挙動変更時の必須検証 (iOS Safari)
+
+本プロジェクトは iPhone Safari 専用のため、UI/挙動を変更したら以下を **必ず** 実行:
+
+1. **Playwright webkit プロジェクトで該当画面の screenshot 撮影**: `npx playwright test --project=webkit --device='iPhone 14' <spec>`
+2. **AudioContext 関連変更時は warmup pattern の生存確認**: 「初回 user gesture の同期 context 中に AudioBufferSourceNode.start() を呼ぶ」が壊れていないか
+3. **タッチ操作変更時の 3 経路イベント生存確認**: `onPointerDown` / `onClick` / `onTouchEnd` のどれが発火しているかを `console.log` で観測
+4. **GIF を扱う場合の src フラグメント生存確認**: `<img src={\`${path}#${id}\`}>` の `#id` 部が削られていないか
+5. **artifact 配置先**: `docs/verification/<タスク名>-results.md`
+
+**Why:** iOS Safari は通常の Chromium デバッグツールでは観測できない固有挙動 (AudioContext 同期起動、GIF 同時表示制約、タッチ合成イベントの取りこぼし) を持つ。デスクトップ Chrome で PASS でも iOS で FAIL する事故が頻発するため、プロジェクト固有チェックリストを skill.md とは別レイヤーで持つ。

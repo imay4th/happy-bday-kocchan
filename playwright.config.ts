@@ -1,4 +1,4 @@
-import { defineConfig } from '@playwright/test';
+import { defineConfig, devices } from '@playwright/test';
 
 /**
  * iPhone 12 相当の viewport / DPR / UA を Chromium で再現して GH Pages 本番版を視覚確認するための設定。
@@ -10,7 +10,8 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: 'https://imay4th.github.io/happy-bday-kocchan/',
+    // ローカル検証時は PLAYWRIGHT_BASE_URL=http://localhost:5173 等を環境変数で渡す
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'https://imay4th.github.io/happy-bday-kocchan/',
     trace: 'off',
     video: 'off',
     screenshot: 'off',
@@ -25,6 +26,12 @@ export default defineConfig({
     {
       name: 'iPhone 12 (Chromium emulation)',
       use: {},
+    },
+    {
+      name: 'iPhone 14 (WebKit)',
+      use: {
+        ...devices['iPhone 14'],
+      },
     },
   ],
 });

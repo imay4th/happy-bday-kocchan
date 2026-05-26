@@ -206,3 +206,90 @@ Running 1 test using 1 worker
 - Chromium 検証より高速 (20.8s vs 29.4s) → iOS のレンダリング・JS 実行が問題なく機能
 - パクパク GIF アニメーション (`#id` フラグメント対策) が WebKit でも生きていることを確認
 - 自動テストレベルでは **物理廃止前の旧バグは全て再発せず**、復活成功
+
+---
+
+## Phase 4: commit + push + GH Actions デプロイ
+
+実施日時: 2026-05-26 / メイン (opus[1m] + high)
+
+### コミット (2 件)
+
+1. **09e6cc7** `docs: 自己レビュー体制強化のプロセス改善ドキュメント追加`
+   - CLAUDE.md / ROADMAP_ARCHIVE.md / docs/plans/session-self-review-countermeasures.md / docs/verification/session-self-review-countermeasures-results.md (4 files, +725 行)
+2. **1750bdb** `feat: 画面1 (Idle) / 画面2 (Charge) を完全版として復活`
+   - ROADMAP.md / src/App.tsx / playwright.config.ts / docs/plans/restore-idle-charge-screens-plan.md / docs/verification/restore-idle-charge-screens-results.md (5 files, +757 / -133 行)
+
+### push 結果
+```
+To https://github.com/imay4th/happy-bday-kocchan.git
+   28cae21..1750bdb  main -> main
+```
+
+### GH Actions デプロイ
+- ワークフロー: `Deploy to GitHub Pages`
+- 状態: `completed` / `success`
+- 公開 URL: https://imay4th.github.io/happy-bday-kocchan/
+
+### Phase 4 自動部分 — PASS
+
+---
+
+## Phase 5: iPhone Safari 実機検証 (ユーザー手動)
+
+**ステータス**: 待機中 (ユーザーが iPhone Safari で確認後、本セクションに結果を追記する)
+
+### 確認項目 (プラン「検証 3」の 8 項目)
+
+| # | 確認項目 | 期待 | 結果 |
+|---|---------|------|------|
+| 1 | 起動直後に Idle 画面が表示される | ハートチャージではなく従来の画面 1 | _未確認_ |
+| 2 | Idle 画面のタップが 1 回で反応 (取りこぼしなし) | 旧バグ再発防止 | _未確認_ |
+| 3 | Charge 画面でスワイプチャージが累積する | 100% 達成可能 | _未確認_ |
+| 4 | 100% 達成後に Cake 画面へ確実に遷移 | 旧バグ再発防止 | _未確認_ |
+| 5 | Idle タップ時点で intro_bgm が鳴り始める | warmup pattern 動作 | _未確認_ |
+| 6 | Cake 遷移時に intro_bgm が止まり 1 秒後に bgm 開始 | BGM 切替動作 | _未確認_ |
+| 7 | Replay → idle 画面復帰、再プレイ可能 | 状態管理確認 | _未確認_ |
+| 8 | (可能なら) Low Power Mode でも 1-3 が動作 | 実機固有 | _未確認_ |
+
+確認後、ユーザーから報告を受けて本表を PASS/FAIL に更新する。FAIL があった場合は再修正計画 (本プラン status を pending に戻し、別途修正プラン起票) で対応。
+
+---
+
+## Phase 6: BGM・効果音を修正前の状態に revert (ユーザー指示)
+
+実施日時: 2026-05-26 / メイン (opus[1m] + high)
+理由: ユーザー指示「BGM・効果音のみ、今回の修正前の状態に戻して」
+
+### 変更内容 (src/App.tsx)
+
+| 行 | Before (Phase 1 で追加分) | After (revert) |
+|----|--------------------------|--------------|
+| L17-19 | 「採用音 (画面1-2 用): intro_bgm / se_pop / ... (画面4 用): se_cracker / bgm」 | 「採用音: se_cracker (紙吹雪) / bgm (バースデーソング)。画面1-2 は無音」 |
+| L42-46 | loadSound 9 件 (intro_bgm + 6 SE + se_cracker + bgm) | loadSound 2 件のみ (se_cracker + bgm) |
+| L51-55 | handleIdle: warmup + resume + se_pop + intro_bgm(loop) + setPhase('charge') | handleIdle: warmup + resume + setPhase('charge') (音は再生しない) |
+| L58-60 | handleCharge: stopSound(intro_bgm) + se_sparkle + setPhase('cake') | handleCharge: setPhase('cake') のみ |
+| L75-83 | handleReplay: stopSound(bgm) + stopSound(intro_bgm) + stopSound(se_charge_loop) + setPhase('idle') | handleReplay: stopSound(bgm) + setPhase('idle') (revert 前と一致) |
+| L117-135 | ChargeScreen サブ handler 4 種 (handleLetterAppear / handleSwipeStart / handleSwipeActive / handleHalfway) | 全削除 |
+| L146-156 | `<ChargeScreen onPhaseChange={} onLetterAppear={} onSwipeStart={} onSwipeActive={} onHalfway={} />` | `<ChargeScreen onPhaseChange={handleCharge} />` |
+
+### 維持された要素 (revert 対象外)
+- 4 画面構成 (Idle → Charge → Cake → Finale)
+- IdleScreen / ChargeScreen の import
+- handleIdle の warmup (画面1 タップで AudioContext を user-gesture 同期で起こす) — cake 効果音と finale BGM のため必須
+- 初期 Phase 'idle'
+- handleReplay の 'idle' 戻り (ユーザー指示「idle 画面から再スタート」維持)
+- 既存 IdleScreen.tsx / ChargeScreen.tsx は不変
+
+### 検証
+
+| 項目 | 結果 |
+|------|------|
+| `npm run build` | PASS (TypeScript エラー 0, ✓ built in 828ms, bundle size 340.44 kB) |
+| `npm run lint` | PASS (エラー 0) |
+| Playwright Chromium + iPhone UA | PASS (1 passed, 36.1s, 4 フェーズ全遷移) |
+
+### Phase 6 総括 — PASS
+- BGM・効果音のみ修正前と完全に一致する状態に revert
+- 4 画面構成と warmup pattern は維持 (画面4 の AudioContext 起動のため)
+- 視覚・遷移挙動は変化なし (Playwright PASS)

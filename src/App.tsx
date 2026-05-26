@@ -15,9 +15,10 @@ import './App.css';
 type Phase = 'idle' | 'charge' | 'cake' | 'finale';
 
 // 採用音:
+//   - se_pop:     画面1 タップ時「チュピッ」
+//   - se_sparkle: 画面2 ゲージ MAX 到達時「ふぁーん」
 //   - se_cracker: 画面4 の紙吹雪クラッカー音
 //   - bgm:        画面4 バースデーソング BGM (1秒遅延ループ)
-// 画面1-2 は無音 (静かな入りで cake のサプライズを引き立てる)
 
 function App() {
   const [phase, setPhase] = useState<Phase>('idle');
@@ -40,24 +41,27 @@ function App() {
   }, [speed]);
 
   useEffect(() => {
-    // 採用音だけプリロード (画面4 用のみ)
-    void sound.loadSound('se_cracker', SOUNDS.se_cracker);
-    void sound.loadSound('bgm', SOUNDS.bgm);
+    // 採用音だけプリロード
+    void sound.loadSound('se_pop', SOUNDS.se_pop);         // 画面1 タップ
+    void sound.loadSound('se_sparkle', SOUNDS.se_sparkle); // 画面2 MAX 到達
+    void sound.loadSound('se_cracker', SOUNDS.se_cracker); // 画面4 紙吹雪
+    void sound.loadSound('bgm', SOUNDS.bgm);               // 画面4 バースデーソング
   }, [sound]);
 
   // 画面1 (Idle) タップ時: iOS Safari の AudioContext を user-gesture 同期で起こす
-  // (画面1-2 では音は鳴らさないが、後の cake 効果音・finale BGM のために
-  // 最初のユーザータップで warmup を実行しておく)
+  // warmup → se_pop「チュピッ」→ charge 遷移
   const handleIdle = useCallback(() => {
     sound.warmup();          // 同期: AudioContext 物理アクティブ化 (最重要)
     void sound.resume();      // 非同期 resume も並行で
+    sound.playSound('se_pop', { volume: 0.6 });
     setPhase('charge');
   }, [sound]);
 
-  // 画面2 (Charge) 100% 到達時: cake 遷移のみ (画面2 は無音)
+  // 画面2 (Charge) 100% 到達時: se_sparkle「ふぁーん」→ cake 遷移
   const handleCharge = useCallback(() => {
+    sound.playSound('se_sparkle', { volume: 0.7 });
     setPhase('cake');
-  }, []);
+  }, [sound]);
 
   const handlePhaseChange = useCallback(async (next: Phase) => {
     if (next === 'finale') {

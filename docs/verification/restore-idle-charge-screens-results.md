@@ -293,3 +293,40 @@ To https://github.com/imay4th/happy-bday-kocchan.git
 - BGM・効果音のみ修正前と完全に一致する状態に revert
 - 4 画面構成と warmup pattern は維持 (画面4 の AudioContext 起動のため)
 - 視覚・遷移挙動は変化なし (Playwright PASS)
+
+---
+
+## Phase 7: se_pop + se_sparkle の 2 効果音だけ追加復活 (ユーザー指示)
+
+実施日時: 2026-05-26 / メイン (opus[1m] + high)
+理由: ユーザー指示「画面をタップしてね: チュピッ / ゲージマックス後: ふぁーん の効果音だけ追加で復活させて」
+
+### 変更内容 (src/App.tsx)
+
+| 行 | 変更内容 |
+|----|---------|
+| L17-21 | コメント拡張: 採用音に `se_pop` (画面1 タップ「チュピッ」) と `se_sparkle` (画面2 MAX「ふぁーん」) を追記 |
+| L42-47 | loadSound に `se_pop` と `se_sparkle` を追加 (計 4 件: se_pop / se_sparkle / se_cracker / bgm) |
+| L51-58 | handleIdle に `sound.playSound('se_pop', { volume: 0.6 })` 追加 |
+| L60-64 | handleCharge に `sound.playSound('se_sparkle', { volume: 0.7 })` 追加 |
+
+### 維持された要素
+- 4 画面構成 (Idle → Charge → Cake → Finale)
+- 他の SE (intro_bgm / se_letter / se_swipe / se_halfway / se_charge_loop) は未追加のまま (Phase 6 の revert 状態)
+- handleIdle の warmup
+- handleReplay の `stopSound('bgm')` のみ
+- ChargeScreen サブ handler 4 種は削除されたまま (JSX も props 渡さず)
+
+### 検証
+
+| 項目 | 結果 |
+|------|------|
+| `npm run build` | PASS (TypeScript エラー 0, ✓ built in 483ms, bundle 340.58 kB) |
+| `npm run lint` | PASS (エラー 0) |
+| Playwright Chromium + iPhone UA | PASS (1 passed, 28.9s, 4 フェーズ全遷移) |
+
+### Phase 7 総括 — PASS
+- 画面1 タップで se_pop (チュピッ) が user-gesture 同期で再生
+- 画面2 100% 到達で se_sparkle (ふぁーん) が再生 → 直後 cake 遷移
+- 視覚・遷移挙動は Phase 6 と同等 (Playwright PASS)
+- 音響は段階的に追加されており、ユーザー確認しながら微調整可能な状態
